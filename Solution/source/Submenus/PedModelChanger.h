@@ -1,50 +1,70 @@
-/*
-* Menyoo PC - Grand Theft Auto V single-player trainer mod
-* Copyright (C) 2019  MAFINS
-*
-* This program is free software: you can redistribute it and/or modify
-* it under the terms of the GNU General Public License as published by
-* the Free Software Foundation, either version 3 of the License, or
-* (at your option) any later version.
-*/
 #pragma once
 
+#include "../Menu/Submenu.h"
+
 #include <string>
+#include <utility>
+#include <vector>
 
-namespace GTAmodel 
-{
-	class Model;
-}
+namespace Menu {
 
-namespace sub
+class PedModelChangerSubmenu final : public ::Menu::Submenu
 {
-	namespace PedFavourites
-	{
-		extern std::string xmlFavouritePeds;
-		bool IsPedAFavourite(GTAmodel::Model model);
-		bool AddPedToFavourites(GTAmodel::Model model, const std::string& customName);
-		bool RemovePedFromFavourites(GTAmodel::Model model);
-		void ShowInstructionalButton(GTAmodel::Model model);
-		void PedFavouritesMenu();
+public:
+	const char* Id() const override    { return "ped_model_changer"; }
+	const char* Title() const override { return "Model Changer"; }
+	void Draw() override;
+};
+
+class PedModelFavouritesSubmenu final : public ::Menu::Submenu
+{
+public:
+	const char* Id() const override    { return "ped_model_changer_favourites"; }
+	const char* Title() const override { return "Favourites"; }
+	void Draw() override;
+	void OnExit() override { searchStr.clear(); }
+
+private:
+	std::string searchStr;
+};
+
+class PedModelCategorySubmenu : public ::Menu::Submenu
+{
+public:
+	void Draw() override;
+
+protected:
+	virtual const std::vector<std::pair<std::string, std::string>>& Models() const = 0;
+
+private:
+	std::pair<std::string, std::string> rngped;
+};
+
+#define MENU_PED_MODEL_CATEGORY(ClassName, IdStr, TitleStr, ListVar) \
+	class ClassName final : public PedModelCategorySubmenu \
+	{ \
+	public: \
+		const char* Id() const override    { return IdStr; } \
+		const char* Title() const override { return TitleStr; } \
+	protected: \
+		const std::vector<std::pair<std::string, std::string>>& Models() const override; \
 	}
 
-	void ChangeModel(GTAmodel::Model model);
-	void AddModelChangerOption(const std::string& text, const GTAmodel::Model& model, int tickTrue = 1);
-	void AddModelOption(const std::string& text, const GTAmodel::Model& model, bool *extra_option_code = nullptr, int tickTrue = 1);
+MENU_PED_MODEL_CATEGORY(PedModelChangerPlayerSubmenu,         "ped_model_changer_player",                "Player",                  g_pedModels_Player);
+MENU_PED_MODEL_CATEGORY(PedModelChangerAnimalSubmenu,         "ped_model_changer_animal",                "Animals",                 g_pedModels_Animal);
+MENU_PED_MODEL_CATEGORY(PedModelChangerAmbFemaleSubmenu,      "ped_model_changer_amb_females",           "Ambient Females",         g_pedModels_AmbientFemale);
+MENU_PED_MODEL_CATEGORY(PedModelChangerAmbMaleSubmenu,        "ped_model_changer_amb_males",             "Ambient Males",           g_pedModels_AmbientMale);
+MENU_PED_MODEL_CATEGORY(PedModelChangerCutsceneSubmenu,       "ped_model_changer_cs",                    "Cutscene Models",         g_pedModels_Cutscene);
+MENU_PED_MODEL_CATEGORY(PedModelChangerGangFemaleSubmenu,     "ped_model_changer_gang_females",          "Gang Females",            g_pedModels_GangFemale);
+MENU_PED_MODEL_CATEGORY(PedModelChangerGangMaleSubmenu,       "ped_model_changer_gang_males",            "Gang Males",              g_pedModels_GangMale);
+MENU_PED_MODEL_CATEGORY(PedModelChangerStorySubmenu,          "ped_model_changer_story",                 "Story Models",            g_pedModels_Story);
+MENU_PED_MODEL_CATEGORY(PedModelChangerMultiplayerSubmenu,    "ped_model_changer_mp",                    "Multiplayer Models",      g_pedModels_Multiplayer);
+MENU_PED_MODEL_CATEGORY(PedModelChangerScenarioFemaleSubmenu, "ped_model_changer_scenario_females",      "Scenario Females",        g_pedModels_ScenarioFemale);
+MENU_PED_MODEL_CATEGORY(PedModelChangerScenarioMaleSubmenu,   "ped_model_changer_scenario_males",        "Scenario Males",          g_pedModels_ScenarioMale);
+MENU_PED_MODEL_CATEGORY(PedModelChangerStScenarioFemaleSubmenu, "ped_model_changer_st_scenario_females", "Story Scenario Females",  g_pedModels_StoryScenarioFemale);
+MENU_PED_MODEL_CATEGORY(PedModelChangerStScenarioMaleSubmenu, "ped_model_changer_st_scenario_males",     "Story Scenario Males",    g_pedModels_StoryScenarioMale);
+MENU_PED_MODEL_CATEGORY(PedModelChangerOthersSubmenu,         "ped_model_changer_others",                "Others",                  g_pedModels_Others);
 
-	void ModelChangerMenu();
-	void ModelChangerPlayer();
-	void ModelChangerAnimal();
-	void ModelChangerAmbientFemale();
-	void ModelChangerAmbientMale();
-	void ModelChangerCutscene();
-	void ModelChangerGangFemale();
-	void ModelChangerGangMale();
-	void ModelChangerStory();
-	void ModelChangerMultiplayer();
-	void ModelChangerScenarioFemale();
-	void ModelChangerScenarioMale();
-	void ModelChangerStoryScenarioFemale();
-	void ModelChangerStoryScenarioMale();
-	void ModelChangerOthers();
+#undef MENU_PED_MODEL_CATEGORY
+
 }

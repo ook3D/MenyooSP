@@ -1,569 +1,412 @@
-/*
-* Menyoo PC - Grand Theft Auto V single-player trainer mod
-* Copyright (C) 2019  MAFINS
-*
-* This program is free software: you can redistribute it and/or modify
-* it under the terms of the GNU General Public License as published by
-* the Free Software Foundation, either version 3 of the License, or
-* (at your option) any later version.
-*/
-#include "MainMenu.h"
 #include "Settings.h"
 
-namespace sub
+#include "../Menu/Engine.h"
+#include "../Menu/SubmenuRegistry.h"
+#include "../Menu/Menu.h"           // titlebox, BG, titletext, font_*, etc.
+#include "../Menu/MenuConfig.h"
+#include "../Menu/Language.h"
+#include "../Menu/Routine.h"        // checkSelfDeathModel, menuPos
+#include "PlayerRuntime.h"          // checkSelfDeathModel
+#include "Neons.h"                 // rainbowBoxes
+
+#include "../Natives/natives2.h"
+#include "../Natives/types.h"
+#include "../Scripting/enums.h"     // HudColour, GTAfont
+#include "../Scripting/Game.h"
+
+#include "SettingsRuntime.h"
+
+#include <cstdlib>
+#include <string>
+#include <vector>
+
+namespace Menu {
+
+namespace
 {
-	void Settings()
+	void MirrorRgbaToActiveTheme(const RGBA* dst, const RGBA& value)
 	{
-		auto& bSyncWithConfig = MenuConfig::bSaveAtIntervals;
+		Engine* engine = Engine::Current();
+		if (!engine) return;
 
-		AddTitle("Settings");
-
-		bool bChangeLangPressed = false;
-		AddTexter("Language", 0, { Language::GetSelectedLangTitle() }, bChangeLangPressed);
-		if (bChangeLangPressed)
-		{
-			Menu::SetSub_delayed = SUB::SETTINGS_LANGUAGE;
-		}
-
-		AddOption("Themes", null, nullFunc, SUB::SETTINGS_THEMES);
-		AddOption("Menu Colours", null, nullFunc, SUB::SETTINGS_COLOURS);
-		AddOption("Menu Fonts", null, nullFunc, SUB::SETTINGS_FONTS);
-		AddOption("Menu Position", null, nullFunc, SUB::SETTINGS_MENUPOS);
-		AddToggle("Mouse Support", Menu::bit_mouse);
-		AddToggle("Gradients", Menu::gradients);
-		AddToggle("Titlebox Globe", Menu::bit_glare_test);
-		AddToggle("Centre Title", Menu::bit_centre_title);
-		AddToggle("Centre Options", Menu::bit_centre_options);
-		AddToggle("Centre Breaks", Menu::bit_centre_breaks);
-		AddToggle("Reset Player Model Upon Death (SP)", checkSelfDeathModel);
-		AddToggle("Sync Menyoo With Config File", bSyncWithConfig, MenuConfig::SaveConfig, MenuConfig::SaveConfig);
-		AddOption("Reset Toggles (Most Of Them)", null, MenuConfig::ConfigResetHaxValues);
-
+		if (dst == &titlebox)               engine->theme.colorTitleBox = value;
+		else if (dst == &BG)                engine->theme.colorBackground = value;
+		else if (dst == &titletext)         engine->theme.colorTitleText = value;
+		else if (dst == &optiontext)        engine->theme.colorOption = value;
+		else if (dst == &selectedtext)      engine->theme.colorSelected = value;
+		else if (dst == &optionbreaks)      engine->theme.colorBreak = value;
+		else if (dst == &optioncount)       engine->theme.colorOptionCount = value;
+		else if (dst == &selectionhi)       engine->theme.colorSelectionHighlight = value;
 	}
 
-	void SettingsMenuPos()
+	void MirrorFontToActiveTheme(const INT8* dst, INT8 value)
 	{
-		bool settingsXPosPlus = false;
-		bool settingsXPosMinus = false;
-		bool settingsYPosPlus = false;
-		bool settingsYPosMinus = false;
+		Engine* engine = Engine::Current();
+		if (!engine) return;
 
-		AddTitle("Menu Position");
-		AddNumber("Offset X", menuPos.x * 100 + 6.0, 2, null, settingsXPosPlus, settingsXPosMinus);
-		AddNumber("Offset Y", menuPos.y * 100 + 7.4, 2, null, settingsYPosPlus, settingsYPosMinus);
+		if (dst == &font_title)          engine->theme.fontTitle = value;
+		else if (dst == &font_options)   engine->theme.fontOptions = value;
+		else if (dst == &font_selection) engine->theme.fontSelection = value;
+		else if (dst == &font_breaks)    engine->theme.fontBreaks = value;
+		// font_hud / font_speedo are not part of Menu's Theme.
+	}
+}
 
+void SettingsSubmenu::Draw()
+{
+	DrawTitle();
 
-		if (settingsXPosPlus)
-		{
-			if (menuPos.x < 0.7397f) 
-			{
-				menuPos.x += 0.002f;
-			}
-			return;
-		}
-		else if (settingsXPosMinus) 
-		{
-			if (menuPos.x > -0.0598f) 
-			{
-				menuPos.x -= 0.002f;
-			}
-			if (menuPos.x < -0.0598f) 
-			{
-				menuPos.x = -0.0598f;
-			}
-			return;
-		}
-
-		if (settingsYPosPlus) 
-		{
-			if (menuPos.y < 0.85f) 
-			{
-				menuPos.y += 0.002f;
-			}
-			return;
-		}
-		else if (settingsYPosMinus) 
-		{
-			if (menuPos.y > -0.074f) 
-			{
-				menuPos.y -= 0.002f;
-			}
-			if (menuPos.y < -0.074f) 
-			{
-				menuPos.y = -0.074f;
-			}
-			return;
-		}
-
-
+	Engine* engine = Engine::Current();
+	if (engine)
+	{
+		const std::vector<std::string> langEntry{ Language::GetSelectedLangTitle() };
+		const ::Menu::InputResult res = engine->AddTextList("Language", 0, langEntry);
+		if (res.accepted)
+			NavigateTo("settings_language");
 	}
 
-	RGBA* g_settingsRGBA;
-	int*g_settingsRGBA2;
-	INT8* g_settingsFont;
-	UINT8 settingsHUDColor = 0ui8;
+	if (DrawOption("Themes"))         NavigateTo("settings_themes");
+	if (DrawOption("Menu Colours"))   NavigateTo("settings_colours");
+	if (DrawOption("Menu Fonts"))     NavigateTo("settings_fonts");
+	if (DrawOption("Menu Position"))  NavigateTo("settings_menupos");
 
-	void AddsettingscolOption(const std::string& text, RGBA& feature)
+	DrawToggle("Mouse Support", Menu::bit_mouse);
+	DrawToggle("Gradients", Menu::gradients);
+	DrawToggle("Titlebox Globe", Menu::bit_glare_test);
+	DrawToggle("Centre Title", Menu::bit_centre_title);
+	DrawToggle("Centre Options", Menu::bit_centre_options);
+	DrawToggle("Centre Breaks", Menu::bit_centre_breaks);
+	DrawToggle("Reset Player Model Upon Death (SP)", checkSelfDeathModel);
+
+	// Sync flag — flipping it (either direction) saves the config.
+	if (DrawToggle("Sync Menyoo With Config File", MenuConfig::bSaveAtIntervals))
 	{
-		auto& settings_rgba = g_settingsRGBA;
-		
-		bool pressed = false;
-		AddOption(text, pressed, nullFunc, SUB::SETTINGS_COLOURS2);
+		MenuConfig::SaveConfig();
+	}
 
-		if (*Menu::currentopATM == Menu::printingop)
+	if (DrawOption("Reset Toggles (Most Of Them)"))
+	{
+		MenuConfig::ConfigResetHaxValues();
+	}
+}
+
+void SettingsMenuPosSubmenu::Draw()
+{
+	DrawTitle();
+
+	Engine* engine = Engine::Current();
+	if (!engine) return;
+
+	{
+		const double displayX = static_cast<double>(menuPos.x) * 100.0 + 6.0;
+		const ::Menu::InputResult res = engine->AddNumber("Offset X", displayX, 2);
+		if (res.rightPressed)
 		{
-			AddPresetColourOptionsPreviews(feature);
+			if (menuPos.x < 0.7397f) menuPos.x += 0.002f;
 		}
-
-		if (pressed)
+		else if (res.leftPressed)
 		{
-			settings_rgba = &feature;
+			if (menuPos.x > -0.0598f) menuPos.x -= 0.002f;
+			if (menuPos.x < -0.0598f) menuPos.x = -0.0598f;
 		}
 	}
 
-	void SettingsColours()
 	{
-		AddTitle("Menu Colours");
-		AddsettingscolOption("Title Box", titlebox);
-		AddsettingscolOption("Background", BG);
-		AddsettingscolOption("Title Text", titletext);
-		AddsettingscolOption("Option Text", optiontext);
-		AddsettingscolOption("Selected Text", selectedtext);
-		AddsettingscolOption("Option Breaks", optionbreaks);
-		AddsettingscolOption("Option Count", optioncount);
-		AddsettingscolOption("Selection Box", selectionhi);
-		AddsettingscolOption("Ped Trackers", _globalPedTrackers_Col);
-		AddToggle("Rainbow", rainbowBoxes);
-	}
-	void SettingsColours2()
-	{
-		bool settingsRInput = false;
-		bool settingsRPlus = false;
-		bool settingsRMinus = false; 
-		bool settingsHUDColourApply = false; 
-		bool settingsHUDColourPlus = false;
-		bool settingsHUDColourMinus = false;
-
-		auto& settingsRGBA = g_settingsRGBA;
-		auto& settingsRGBA2 = g_settingsRGBA2;
-
-		AddTitle("Set Colour");
-		AddNumber("Red", settingsRGBA->R, 0, settingsRInput, settingsRPlus, settingsRMinus);
-
-		switch (*Menu::currentopATM)
+		const double displayY = static_cast<double>(menuPos.y) * 100.0 + 7.4;
+		const ::Menu::InputResult res = engine->AddNumber("Offset Y", displayY, 2);
+		if (res.rightPressed)
 		{
-		case 1:
-		case 2:
-		case 3:
-			AddPresetColourOptionsPreviews(settingsRGBA->R, settingsRGBA->G, settingsRGBA->B);
-			break;
+			if (menuPos.y < 0.85f) menuPos.y += 0.002f;
 		}
-
-		AddNumber("Green", settingsRGBA->G, 0, settingsRInput, settingsRPlus, settingsRMinus);
-		AddNumber("Blue", settingsRGBA->B, 0, settingsRInput, settingsRPlus, settingsRMinus);
-		AddNumber("Opacity", settingsRGBA->A, 0, settingsRInput, settingsRPlus, settingsRMinus);
-		AddTexter("HUD Colour", settingsHUDColor, HudColour::vHudColours, settingsHUDColourApply, settingsHUDColourPlus, settingsHUDColourMinus);
-		AddBreak("---Presets---");
-		AddPresetColourOptions(settingsRGBA->R, settingsRGBA->G, settingsRGBA->B);
-
-		switch (*Menu::currentopATM)
+		else if (res.leftPressed)
 		{
-			case 1: 
-				settingsRGBA2 = &settingsRGBA->R;
-				break;
-			case 2: 
-				settingsRGBA2 = &settingsRGBA->G;
-				break;
-			case 3: 
-				settingsRGBA2 = &settingsRGBA->B;
-				break;
-			case 4: 
-				settingsRGBA2 = &settingsRGBA->A;
-				break;
-		}
-
-		if (settingsRInput) 
-		{
-			int tempHash = *settingsRGBA2;
-			try 
-			{
-				tempHash = abs(std::stoi(Game::InputBox(std::to_string(*settingsRGBA2), 4U, "", std::to_string(*settingsRGBA2))));
-			}
-			catch (...)
-			{
-				Game::Print::PrintErrorInvalidInput(std::to_string(tempHash)); 
-			}
-
-			if (!(tempHash >= 0 && tempHash <= 255)) 
-			{
-				Game::Print::PrintErrorInvalidInput(std::to_string(tempHash));
-			}
-			else 
-			{
-				*settingsRGBA2 = tempHash;
-			}
-			return;
-		}
-
-		if (settingsRPlus) 
-		{
-			if (*settingsRGBA2 < 255)
-			{
-				(*settingsRGBA2)++;
-			}
-			else 
-			{
-				*settingsRGBA2 = 0;
-			}
-			return;
-		}
-		else if (settingsRMinus) 
-		{
-			if (*settingsRGBA2 > 0)
-			{
-				(*settingsRGBA2)--;
-			}
-			else
-			{
-				*settingsRGBA2 = 255;
-			}
-			return;
-		}
-
-		if (settingsHUDColourPlus) 
-		{ 
-			if (settingsHUDColor < HudColour::vHudColours.size() - 1) 
-			{
-				settingsHUDColor++;
-			}
-			else
-			{
-				settingsHUDColor = 0;
-			}
-			return; 
-		}
-		if (settingsHUDColourMinus) 
-		{ 
-			if (settingsHUDColor > 0) 
-			{
-				settingsHUDColor--;
-			}
-			else
-			{
-				settingsHUDColor = 180;
-			}
-			return; 
-		}
-		if (settingsHUDColourApply)
-		{
-			GET_HUD_COLOUR(settingsHUDColor, &settingsRGBA->R, &settingsRGBA->G, &settingsRGBA->B, &inull);
-			return; 
+			if (menuPos.y > -0.074f) menuPos.y -= 0.002f;
+			if (menuPos.y < -0.074f) menuPos.y = -0.074f;
 		}
 	}
 
-	void AddsettingsfonOption(const std::string& text, int fontIndex, INT8& feature)
+	engine->theme.position = menuPos;
+}
+
+void SettingsThemesSubmenu::Draw()
+{
+	DrawTitle();
+
+	const int count = sub::SettingsThemeCount();
+	for (int i = 0; i < count; ++i)
 	{
-		auto& settingsFont = g_settingsFont;
-
-		bool bitChangeFont = false;
-		bool bitSetFeature = false;
-
-		if (fontIndex == -1)
+		const bool isActive = sub::SettingsThemeIsActive(i);
+		if (DrawSelectionItem(sub::SettingsThemeName(i), isActive,
+			Checkbox::MAKEUPTHING, Checkbox::NONE))
 		{
-			AddOption(text, bitSetFeature, nullFunc, SUB::SETTINGS_FONTS2);
-		}
-		else
-		{
-			AddOption(text, bitChangeFont);
-		}
+			sub::SettingsThemeApply(i);
 
-		if (bitSetFeature)
-		{
-			settingsFont = &feature;
-		}
-		else if (bitChangeFont)
-		{
-			*settingsFont = fontIndex;
-		}
-	}
-	void SettingsFonts()
-	{
-		AddTitle("Menu Fonts");
-		AddsettingsfonOption("Title", -1, font_title);
-		AddsettingsfonOption("Options", -1, font_options);
-		AddsettingsfonOption("Selected Option", -1, font_selection);
-		AddsettingsfonOption("Option Breaks", -1, font_breaks);
-		AddsettingsfonOption("HUD Font", -1, font_hud);
-		AddsettingsfonOption("Speedo Text", -1, font_speedo);
-	}
-	
-	void SettingsFonts2()
-	{
-		auto& settingsFont = g_settingsFont;
-		bool fonts2Input = false;
-		INT8 dummyFeature;
-
-		AddTitle("Set Font");
-		AddsettingsfonOption("Normalish", GTAfont::Arial, dummyFeature);
-		AddsettingsfonOption("Impactish", GTAfont::Impact, dummyFeature);
-		AddsettingsfonOption("Italic", GTAfont::Italic, dummyFeature);
-		AddsettingsfonOption("Pricedown", GTAfont::Pricedown, dummyFeature);
-		AddsettingsfonOption("Caps", GTAfont::Caps, dummyFeature);
-		AddOption("Input Index", fonts2Input);
-
-		if (fonts2Input)
-		{
-			std::string inputStr = Game::InputBox(std::to_string(*settingsFont), 7U, "", std::to_string(*settingsFont));
-			auto& settings_font = g_settingsFont;
-			int tempHash = *settings_font;
-			try 
+			Engine* engine = Engine::Current();
+			if (engine)
 			{
-				tempHash = abs(stoi(inputStr)); 
-			}
-			catch (...) 
-			{
-				Game::Print::PrintErrorInvalidInput(inputStr); 
-			}
-			*settings_font = tempHash;
-		}
-	}
-
-	void SettingsLanguage()
-	{
-		AddTitle("Language");
-		AddTickol("English", Language::selectedLang == nullptr, Language::ResetSelectedLang, Language::ResetSelectedLang);
-
-		for (auto& l : Language::allLangs)
-		{
-			bool bPressed = false;
-			AddTickol(l.GetName(), Language::selectedLang == &l, bPressed, bPressed); if (bPressed)
-			{
-				Language::SetSelectedLang(&l);
-			}
-		}
-
-		AddTickol("Reload Language Files", true, *reinterpret_cast<void(*)()>(&Language::Init), *reinterpret_cast<void(*)()>(&Language::Init), TICKOL::CROSS);
-
-	}
-	class MenyooTheme
-	{
-	private:
-		bool grads;
-		bool rainbow;
-		bool thinLineOverFooter;
-
-		RGBA ttbox;
-		RGBA bgbox;
-		RGBA tttext;
-		RGBA optext;
-		RGBA seltext;
-		RGBA opbreak;
-		RGBA opcount;
-		RGBA selhi;
-		RGBA pedtrackers;
-
-		INT8 f_title;
-		INT8 f_options;
-		INT8 f_selection;
-		INT8 f_breaks;
-		INT8 f_hud;
-		INT8 f_speedo;
-	public:
-		MenyooTheme()
-		{
-		}
-		MenyooTheme(bool _grads, bool _rainbow, bool _thinLineOverFooter,
-			RGBA _ttbox, RGBA _bgbox, RGBA _tttext, RGBA _optext, RGBA _seltext, RGBA _opbreak, RGBA _opcount, RGBA _selhi, RGBA _pedtrackers,
-			INT8 _f_title, INT8 _f_options, INT8 _f_selection, INT8 _f_breaks, INT8 _f_hud, INT8 _f_speedo)
-		{
-			grads = _grads;
-			rainbow = _rainbow;
-			thinLineOverFooter = _thinLineOverFooter;
-
-			ttbox = _ttbox;
-			bgbox = _bgbox;
-			tttext = _tttext;
-			optext = _optext;
-			seltext = _seltext;
-			opbreak = _opbreak;
-			opcount = _opcount;
-			selhi = _selhi;
-			pedtrackers = _pedtrackers;
-
-			f_title = _f_title;
-			f_options = _f_options;
-			f_selection = _f_selection;
-			f_breaks = _f_breaks;
-			f_hud = _f_hud;
-			f_speedo = _f_speedo;
-		}
-
-		void SetActive()
-		{
-			Menu::gradients = grads;
-			rainbowBoxes = rainbow;
-			Menu::thinLineOverScrect = thinLineOverFooter;
-
-			titlebox = ttbox;
-			BG = bgbox;
-			titletext = tttext;
-			optiontext = optext;
-			selectedtext = seltext;
-			optionbreaks = opbreak;
-			optioncount = opcount;
-			selectionhi = selhi;
-			_globalPedTrackers_Col = pedtrackers;
-
-			font_title = f_title;
-			font_options = f_options;
-			font_selection = f_selection;
-			font_breaks = f_breaks;
-			font_hud = f_hud;
-			font_speedo = f_speedo;
-		}
-		bool IsActive()
-		{
-			return
-				Menu::gradients == grads &&
-				rainbowBoxes == rainbow &&
-				Menu::thinLineOverScrect == thinLineOverFooter &&
-
-				titlebox == ttbox &&
-				BG == bgbox &&
-				titletext == tttext &&
-				optiontext == optext &&
-				selectedtext == seltext &&
-				optionbreaks == opbreak &&
-				optioncount == opcount &&
-				selectionhi == selhi &&
-				_globalPedTrackers_Col == pedtrackers &&
-
-				font_title == f_title &&
-				font_options == f_options &&
-				font_selection == f_selection &&
-				font_breaks == f_breaks &&
-				font_hud == f_hud &&
-				font_speedo == f_speedo;
-		}
-
-		static MenyooTheme CurrentlyActiveTheme()
-		{
-			MenyooTheme curr;
-
-			curr.grads = Menu::gradients;
-			curr.rainbow = rainbowBoxes;
-			curr.thinLineOverFooter = Menu::thinLineOverScrect;
-
-			curr.ttbox = titlebox;
-			curr.bgbox = BG;
-			curr.tttext = titletext;
-			curr.optext = optiontext;
-			curr.seltext = selectedtext;
-			curr.opbreak = optionbreaks;
-			curr.opcount = optioncount;
-			curr.selhi = selectionhi;
-			curr.pedtrackers = _globalPedTrackers_Col;
-
-			curr.f_title = font_title;
-			curr.f_options = font_options;
-			curr.f_selection = font_selection;
-			curr.f_breaks = font_breaks;
-			curr.f_hud = font_hud;
-			curr.f_speedo = font_speedo;
-
-			return curr;
-		}
-
-		bool operator ==(const MenyooTheme& value2) const
-		{
-			const MenyooTheme& value1 = *this;
-
-			return
-				value1.grads == value2.grads &&
-				value1.rainbow == value2.rainbow &&
-				value1.thinLineOverFooter == value2.thinLineOverFooter &&
-
-				value1.ttbox == value2.ttbox &&
-				value1.bgbox == value2.bgbox &&
-				value1.tttext == value2.tttext &&
-				value1.optext == value2.optext &&
-				value1.seltext == value2.seltext &&
-				value1.opbreak == value2.opbreak &&
-				value1.opcount == value2.opcount &&
-				value1.selhi == value2.selhi &&
-				value1.pedtrackers == value2.pedtrackers &&
-
-				value1.f_title == value2.f_title &&
-				value1.f_options == value2.f_options &&
-				value1.f_selection == value2.f_selection &&
-				value1.f_breaks == value2.f_breaks &&
-				value1.f_hud == value2.f_hud &&
-				value1.f_speedo == value2.f_speedo;
-		}
-		bool Equals(MenyooTheme const& value2)
-		{
-			return (this->operator==(value2));
-		}
-
-	};
-	class MenyooThemeNamed
-	{
-	public:
-		std::string name;
-		MenyooTheme theme;
-
-		MenyooThemeNamed(const std::string& newName, const MenyooTheme& newTheme)
-		{
-			this->name = newName;
-			this->theme = newTheme;
-		}
-	};
-
-	std::vector<MenyooThemeNamed> vValues_MenyooThemes
-	{
-		{ "Black & Green", MenyooTheme(true, false, false, RGBA(0, 0, 0, 255), RGBA(0, 0, 0, 100), RGBA(0, 255, 100, 255), RGBA(0, 255, 100, 255), RGBA(255, 255, 255, 255), RGBA(0, 255, 100, 255), RGBA(0, 255, 100, 255), RGBA(0, 255, 100, 255), RGBA(0, 255, 100, 205), GTAfont::Italic, GTAfont::Impact, GTAfont::Impact, GTAfont::Italic, GTAfont::Arial, GTAfont::Pricedown) },
-		{ "Black & Teal", MenyooTheme(true, false, false, RGBA(0, 0, 0, 255), RGBA(0, 0, 0, 150), RGBA(0, 255, 255, 255), RGBA(0, 255, 255, 255), RGBA(255, 255, 255, 255), RGBA(0, 255, 255, 255), RGBA(0, 255, 255, 255), RGBA(0, 255, 255, 150), RGBA(0, 255, 255, 205), GTAfont::Italic, GTAfont::Impact, GTAfont::Impact, GTAfont::Italic, GTAfont::Arial, GTAfont::Pricedown) },
-		{ "Black & Red", MenyooTheme(true, false, false, RGBA(0, 0, 0, 255), RGBA(0, 0, 0, 175), RGBA(255, 0, 0, 255), RGBA(255, 0, 0, 255), RGBA(255, 255, 255, 255), RGBA(255, 0, 0, 255), RGBA(255, 0, 0, 255), RGBA(255, 0, 0, 100), RGBA(255, 0, 0, 205), GTAfont::Italic, GTAfont::Impact, GTAfont::Impact, GTAfont::Italic, GTAfont::Arial, GTAfont::Pricedown) },
-		{ "Black & White", MenyooTheme(true, false, false, RGBA(0, 0, 0, 255), RGBA(0, 0, 0, 50), RGBA(255, 255, 255, 255), RGBA(255, 255, 255, 255), RGBA(255, 255, 255, 255), RGBA(255, 255, 255, 255), RGBA(255, 255, 255, 255), RGBA(255, 255, 255, 150), RGBA(255, 255, 255, 205), GTAfont::Italic, GTAfont::Impact, GTAfont::Impact, GTAfont::Italic, GTAfont::Arial, GTAfont::Pricedown) },
-		{ "Black & Yellow", MenyooTheme(true, false, false, RGBA(0, 0, 0, 255), RGBA(0, 0, 0, 100), RGBA(255, 255, 100, 255), RGBA(255, 255, 100, 255), RGBA(255, 255, 255, 255), RGBA(255, 255, 100, 255), RGBA(255, 255, 100, 255), RGBA(255, 255, 100, 125), RGBA(255, 255, 100, 205), GTAfont::Italic, GTAfont::Impact, GTAfont::Impact, GTAfont::Italic, GTAfont::Arial, GTAfont::Pricedown) },
-		{ "White & Green", MenyooTheme(true, false, false, RGBA(255, 255, 255, 255), RGBA(0, 0, 0, 100), RGBA(0, 255, 100, 255), RGBA(0, 255, 100, 255), RGBA(255, 255, 255, 255), RGBA(0, 255, 100, 255), RGBA(0, 255, 100, 255), RGBA(0, 255, 125, 150), RGBA(0, 255, 100, 255), GTAfont::Italic, GTAfont::Impact, GTAfont::Impact, GTAfont::Italic, GTAfont::Arial, GTAfont::Pricedown) },
-		{ "White & Teal", MenyooTheme(true, false, false, RGBA(255, 255, 255, 255), RGBA(0, 0, 0, 100), RGBA(0, 255, 255, 255), RGBA(0, 255, 255, 255), RGBA(255, 255, 255, 255), RGBA(0, 255, 255, 255), RGBA(0, 255, 255, 255), RGBA(0, 255, 255, 150), RGBA(0, 255, 255, 205), GTAfont::Italic, GTAfont::Impact, GTAfont::Impact, GTAfont::Italic, GTAfont::Arial, GTAfont::Pricedown) },
-		{ "White & Red", MenyooTheme(true, false, false, RGBA(255, 255, 255, 255), RGBA(0, 0, 0, 175), RGBA(255, 0, 0, 255), RGBA(255, 255, 255, 255), RGBA(255, 255, 255, 255), RGBA(255, 0, 0, 255), RGBA(255, 0, 0, 255), RGBA(255, 0, 0, 150), RGBA(255, 0, 0, 205), GTAfont::Italic, GTAfont::Impact, GTAfont::Impact, GTAfont::Italic, GTAfont::Arial, GTAfont::Pricedown) },
-		{ "White & Black", MenyooTheme(true, false, false, RGBA(255, 255, 255, 255), RGBA(0, 0, 0, 150), RGBA(0, 0, 0, 255), RGBA(255, 255, 255, 255), RGBA(0, 0, 0, 255), RGBA(0, 0, 0, 255), RGBA(0, 0, 0, 255), RGBA(255, 255, 255, 150), RGBA(255, 255, 255, 205), GTAfont::Italic, GTAfont::Impact, GTAfont::Impact, GTAfont::Italic, GTAfont::Arial, GTAfont::Pricedown) },
-		{ "White & Yellow", MenyooTheme(true, false, false, RGBA(255, 255, 255, 255), RGBA(0, 0, 0, 100), RGBA(255, 255, 100, 255), RGBA(255, 255, 100, 255), RGBA(255, 255, 100, 255), RGBA(255, 255, 100, 255), RGBA(255, 255, 100, 255), RGBA(255, 255, 100, 125), RGBA(255, 255, 100, 205), GTAfont::Italic, GTAfont::Impact, GTAfont::Impact, GTAfont::Italic, GTAfont::Arial, GTAfont::Pricedown) },
-		{ "Halloween", MenyooTheme(true, false, false, RGBA(22, 161, 18, 255), RGBA(96, 62, 148, 170), RGBA(255, 51, 0, 255), RGBA(255, 255, 255, 255), RGBA(0, 0, 0, 255), RGBA(255, 255, 255, 255), RGBA(255, 51, 0, 255), RGBA(255, 51, 0, 150), RGBA(22, 161, 18, 205), GTAfont::Pricedown, GTAfont::Impact, GTAfont::Impact, GTAfont::Italic, GTAfont::Arial, GTAfont::Pricedown) },
-		{ "Elegant Purple", MenyooTheme(true, false, true, RGBA(102, 0, 204, 255), RGBA(10, 10, 10, 255), RGBA(255, 255, 255, 255), RGBA(255, 255, 255, 255), RGBA(0, 0, 0, 255), RGBA(255, 255, 255, 240), RGBA(255, 255, 255, 255), RGBA(255, 255, 255, 211), RGBA(153, 51, 255, 205), GTAfont::Pricedown, GTAfont::Impact, GTAfont::Impact, GTAfont::Italic, GTAfont::Arial, GTAfont::Pricedown) },
-	};
-
-	void SettingsThemesMain()
-	{
-		AddTitle("Themes");
-
-		bool pressed = false;
-		for (auto& them : vValues_MenyooThemes)
-		{
-			pressed = false;
-			BOOL isActive = (them.theme == MenyooTheme::CurrentlyActiveTheme()) ? TRUE : FALSE;
-			AddTickol(them.name, isActive, pressed, pressed, TICKOL::MAKEUPTHING, TICKOL::NONE, false);
-			if (pressed)
-			{
-				them.theme.SetActive();
+				engine->theme.colorTitleBox = titlebox;
+				engine->theme.colorBackground = BG;
+				engine->theme.colorTitleText = titletext;
+				engine->theme.colorOption = optiontext;
+				engine->theme.colorSelected = selectedtext;
+				engine->theme.colorBreak = optionbreaks;
+				engine->theme.colorOptionCount = optioncount;
+				engine->theme.colorSelectionHighlight = selectionhi;
+				engine->theme.fontTitle = font_title;
+				engine->theme.fontOptions = font_options;
+				engine->theme.fontSelection = font_selection;
+				engine->theme.fontBreaks = font_breaks;
+				engine->theme.useGradients = Menu::gradients;
 			}
 		}
 	}
 }
 
+void SettingsColoursSubmenu::Draw()
+{
+	DrawTitle();
 
-#include "..\Menu\submenu_switch.h"
-#include "..\Menu\submenu_enum.h"
-REGISTER_SUBMENU(SETTINGS,            sub::Settings)
-REGISTER_SUBMENU(SETTINGS_MENUPOS,    sub::SettingsMenuPos)
-REGISTER_SUBMENU(SETTINGS_THEMES,     sub::SettingsThemesMain)
-REGISTER_SUBMENU(SETTINGS_COLOURS,    sub::SettingsColours)
-REGISTER_SUBMENU(SETTINGS_COLOURS2,   sub::SettingsColours2)
-REGISTER_SUBMENU(SETTINGS_FONTS,      sub::SettingsFonts)
-REGISTER_SUBMENU(SETTINGS_FONTS2,     sub::SettingsFonts2)
-REGISTER_SUBMENU(SETTINGS_LANGUAGE,   sub::SettingsLanguage)
+	auto pickerRow = [this](const std::string& label, RGBA& feature)
+	{
+		const bool pressed = DrawOption(label);
 
+		Engine* engine = Engine::Current();
+		if (engine && IsCurrentRowSelected())
+		{
+			engine->AddPresetColourOptionsPreview(
+				static_cast<unsigned char>(feature.R),
+				static_cast<unsigned char>(feature.G),
+				static_cast<unsigned char>(feature.B));
+		}
 
+		if (pressed)
+		{
+			sub::g_settingsRGBA = &feature;
+			NavigateTo("settings_colours2");
+		}
+	};
 
+	pickerRow("Title Box", titlebox);
+	pickerRow("Background", BG);
+	pickerRow("Title Text", titletext);
+	pickerRow("Option Text", optiontext);
+	pickerRow("Selected Text", selectedtext);
+	pickerRow("Option Breaks", optionbreaks);
+	pickerRow("Option Count", optioncount);
+	pickerRow("Selection Box", selectionhi);
+	pickerRow("Ped Trackers", _globalPedTrackers_Col);
+	DrawToggle("Rainbow", rainbowBoxes);
+}
+
+void SettingsColours2Submenu::Draw()
+{
+	DrawTitle();
+
+	RGBA* target = sub::g_settingsRGBA;
+	if (!target)
+	{
+		Engine* engine = Engine::Current();
+		if (engine) engine->GoBack();
+		return;
+	}
+
+	auto channelRow = [this](const std::string& label, int& channel) -> bool
+	{
+		bool mutated = false;
+
+		if (DrawNumber(label, channel, 1, 0, 255))
+		{
+			mutated = true;
+		}
+
+		if (IsCurrentRowSelected()
+			&& MenuPressTimer::IsButtonTapped(MenuPressTimer::Button::Accept))
+		{
+			const std::string current = std::to_string(channel);
+			const std::string inputStr = Game::InputBox(current, 4U, "", current);
+			if (!inputStr.empty())
+			{
+				try
+				{
+					int parsed = std::abs(std::stoi(inputStr));
+					if (parsed >= 0 && parsed <= 255)
+					{
+						channel = parsed;
+						mutated = true;
+					}
+					else
+					{
+						Game::Print::PrintErrorInvalidInput(inputStr);
+					}
+				}
+				catch (...)
+				{
+					Game::Print::PrintErrorInvalidInput(inputStr);
+				}
+			}
+		}
+
+		return mutated;
+	};
+
+	bool changed = false;
+	if (channelRow("Red", target->R))     changed = true;
+	if (channelRow("Green", target->G))   changed = true;
+	if (channelRow("Blue", target->B))    changed = true;
+	if (channelRow("Opacity", target->A)) changed = true;
+
+	{
+		Engine* engine = Engine::Current();
+		if (engine)
+		{
+			int idx = sub::settingsHUDColor;
+			const ::Menu::InputResult res = engine->AddTextList(
+				"HUD Colour", idx, HudColour::vHudColours);
+			if (res.rightPressed)
+			{
+				if (sub::settingsHUDColor < HudColour::vHudColours.size() - 1)
+					sub::settingsHUDColor++;
+				else
+					sub::settingsHUDColor = 0;
+			}
+			else if (res.leftPressed)
+			{
+				if (sub::settingsHUDColor > 0)
+					sub::settingsHUDColor--;
+				else
+					sub::settingsHUDColor = 180;
+			}
+			if (res.accepted)
+			{
+				int inull = 0;
+				GET_HUD_COLOUR(sub::settingsHUDColor,
+					&target->R, &target->G, &target->B, &inull);
+				changed = true;
+			}
+		}
+	}
+
+	DrawBreak("---Presets---");
+
+	{
+		Engine* engine = Engine::Current();
+		if (engine)
+		{
+			if (engine->AddPresetColourOptions(target->R, target->G, target->B))
+			{
+				changed = true;
+			}
+		}
+	}
+
+	if (changed)
+		MirrorRgbaToActiveTheme(target, *target);
+}
+
+void SettingsFontsSubmenu::Draw()
+{
+	DrawTitle();
+
+	auto pickerRow = [this](const std::string& label, INT8& feature)
+	{
+		if (DrawOption(label))
+		{
+			sub::g_settingsFont = &feature;
+			NavigateTo("settings_fonts2");
+		}
+	};
+
+	pickerRow("Title", font_title);
+	pickerRow("Options", font_options);
+	pickerRow("Selected Option", font_selection);
+	pickerRow("Option Breaks", font_breaks);
+	pickerRow("HUD Font", font_hud);
+	pickerRow("Speedo Text", font_speedo);
+}
+
+void SettingsFonts2Submenu::Draw()
+{
+	DrawTitle();
+
+	if (!sub::g_settingsFont)
+	{
+		Engine* engine = Engine::Current();
+		if (engine) engine->GoBack();
+		return;
+	}
+
+	auto applyRow = [this](const std::string& label, INT8 fontIndex)
+	{
+		if (DrawOption(label))
+		{
+			INT8* target = sub::g_settingsFont;
+			if (target)
+			{
+				*target = fontIndex;
+				MirrorFontToActiveTheme(target, fontIndex);
+			}
+		}
+	};
+
+	applyRow("Normalish",  static_cast<INT8>(GTAfont::Arial));
+	applyRow("Impactish",  static_cast<INT8>(GTAfont::Impact));
+	applyRow("Italic",     static_cast<INT8>(GTAfont::Italic));
+	applyRow("Pricedown",  static_cast<INT8>(GTAfont::Pricedown));
+	applyRow("Caps",       static_cast<INT8>(GTAfont::Caps));
+
+	if (DrawOption("Input Index"))
+	{
+		INT8* target = sub::g_settingsFont;
+		if (target)
+		{
+			const std::string current = std::to_string(static_cast<int>(*target));
+			const std::string inputStr = Game::InputBox(current, 7U, "", current);
+			if (!inputStr.empty())
+			{
+				try
+				{
+					int parsed = std::abs(std::stoi(inputStr));
+					*target = static_cast<INT8>(parsed);
+					MirrorFontToActiveTheme(target, *target);
+				}
+				catch (...)
+				{
+					Game::Print::PrintErrorInvalidInput(inputStr);
+				}
+			}
+		}
+	}
+}
+
+void SettingsLanguageSubmenu::Draw()
+{
+	DrawTitle();
+
+	if (DrawSelectionItem("English", Language::selectedLang == nullptr))
+	{
+		Language::ResetSelectedLang();
+	}
+
+	for (auto& l : Language::allLangs)
+	{
+		if (DrawSelectionItem(l.GetName(), Language::selectedLang == &l))
+		{
+			Language::SetSelectedLang(&l);
+		}
+	}
+
+	if (DrawSelectionItem("Reload Language Files", true, Checkbox::CROSS, Checkbox::NONE))
+	{
+		Language::Init();
+	}
+}
+
+}
+REGISTER_SUBMENU(::Menu::SettingsSubmenu)
+REGISTER_SUBMENU(::Menu::SettingsMenuPosSubmenu)
+REGISTER_SUBMENU(::Menu::SettingsThemesSubmenu)
+REGISTER_SUBMENU(::Menu::SettingsColoursSubmenu)
+REGISTER_SUBMENU(::Menu::SettingsColours2Submenu)
+REGISTER_SUBMENU(::Menu::SettingsFontsSubmenu)
+REGISTER_SUBMENU(::Menu::SettingsFonts2Submenu)
+REGISTER_SUBMENU(::Menu::SettingsLanguageSubmenu)

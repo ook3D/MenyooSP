@@ -12,7 +12,10 @@
 #include "..\..\macros.h"
 
 #include "..\..\Menu\Menu.h"
+#include "..\..\Menu\Engine.h"
+#include "..\..\Menu\GlobalEngine.h"
 #include "..\..\Menu\Routine.h"
+#include "..\VehicleRuntime.h"
 
 #include "..\..\Natives\natives2.h"
 #include "..\..\Scripting\GTAentity.h"
@@ -40,9 +43,9 @@
 #include "Databases.h"
 #include "BlipManagement.h"
 #include "MarkerManagement.h"
-#include "..\PedComponentChanger.h"
-#include "..\PtfxSubs.h"
-#include "..\PedAnimation.h"
+#include "..\PedComponentRuntime.h"
+#include "..\PtfxData.h"
+#include "..\PedAnimationRuntime.h"
 #include "..\Teleport\TeleMethods.h"
 
 #include <string>
@@ -2023,7 +2026,7 @@ namespace sub::Spooner
 
 			//====================================================================================================================
 
-			Menu::SetSub_closed();
+			Menu::GlobalEngine().Close();
 
 			return true;
 		}
@@ -2098,7 +2101,7 @@ namespace sub::Spooner
 				mh.Unload();
 			}
 
-			Menu::SetSub_closed();
+			Menu::GlobalEngine().Close();
 
 			return true;
 		}

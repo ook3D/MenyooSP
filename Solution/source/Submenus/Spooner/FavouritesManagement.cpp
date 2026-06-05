@@ -19,7 +19,7 @@
 #include "..\..\Util\StringManip.h"
 #include "..\..\Scripting\Model.h"
 
-#include "..\VehicleSpawner.h"
+#include "..\VehicleSpawnerRuntime.h"
 
 #include <string>
 #include <pugixml/src/pugixml.hpp>

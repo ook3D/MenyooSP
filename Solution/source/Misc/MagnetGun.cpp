@@ -23,6 +23,9 @@
 #include "..\Menu\Menu.h"
 
 #include "..\Menu\Routine.h"
+#include "..\Submenus\Neons.h"
+#include "..\Submenus\WeaponRuntime.h"
+#include "..\Submenus\VehicleRuntime.h"
 
 namespace MagnetGun
 {

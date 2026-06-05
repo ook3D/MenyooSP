@@ -32,6 +32,8 @@
 
 #include "World.h"
 #include "..\Menu\Routine.h"
+#include "..\Submenus\VehicleRuntime.h"
+#include "..\Submenus\Neons.h"
 
 #include <string>
 #include <vector>

@@ -25,7 +25,7 @@
 #include "..\Scripting\CustomHelpText.h"
 #include "..\Scripting\WeaponIndivs.h"
 
-#include "..\Submenus\PedComponentChanger.h"
+#include "..\Submenus\PedComponentRuntime.h"
 
 #include <vector>
 

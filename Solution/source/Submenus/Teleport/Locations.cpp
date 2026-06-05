@@ -12,6 +12,7 @@
 //#include "..\..\macros.h"
 
 #include "..\..\Menu\Menu.h"
+#include "..\..\Menu\submenu_enum.h"
 //#include "..\..\Menu\Routine.h"
 
 //#include "..\..\Natives\natives2.h"

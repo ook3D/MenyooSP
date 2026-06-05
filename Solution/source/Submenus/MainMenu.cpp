@@ -1,50 +1,43 @@
-/*
-* Menyoo PC - Grand Theft Auto V single-player trainer mod
-* Copyright (C) 2019  MAFINS
-*
-* This program is free software: you can redistribute it and/or modify
-* it under the terms of the GNU General Public License as published by
-* the Free Software Foundation, either version 3 of the License, or
-* (at your option) any later version.
-*/
 #include "MainMenu.h"
 
-namespace sub
+#include "../Menu/SubmenuRegistry.h"
+#include "../Menu/Routine.h"
+#include "PlayerRuntime.h"
+
+#include "../Natives/natives2.h"
+#include "../Util/FileLogger.h"
+
+namespace Menu {
+
+void MainMenuSubmenu::Draw()
 {
-	void MainMenu()
+	static bool firstLoad = true;
+	if (firstLoad)
 	{
-		static bool firstLoad = true;
-		if(firstLoad)
-		{
-			firstLoad = false;
-			addlog(ige::LogType::LOG_TRACE, "First Load of MainMenu Submenu");
-		}
-
-		AddTitle("MENYOO");
-		AddOption("Players", null, nullFunc, SUB::PLAYERSSUB);
-		AddOption("Player Options", null, nullFunc, SUB::PLAYEROPS);
-		AddOption("Vehicle Options", null, nullFunc, SUB::VEHICLEOPS);
-		AddOption("Teleport Options", null, nullFunc, SUB::TELEPORTOPS);
-		AddOption("Weapon Options", null, nullFunc, SUB::WEAPONOPS);
-		AddOption("Weather Options", null, nullFunc, SUB::WEATHEROPS);
-		AddOption("Time Options", null, nullFunc, SUB::TIMEOPS);
-		AddOption("Bodyguard Options", null, nullFunc, SUB::BODYGUARDMAINMENU);
-		AddOption("Object Spooner", null, nullFunc, SUB::SPOONER_MAIN);
-		AddOption("Misc Options", null, nullFunc, SUB::MISCOPS);
-		AddOption("Settings", null, nullFunc, SUB::SETTINGS);
-		AddOption("The People Behind Menyoo", null, nullFunc, SUB::CREDITSSUB);
-
-		g_Ped2 = PLAYER_ID();
-		g_Ped1 = PLAYER_PED_ID();
-		g_PlayerName = GET_PLAYER_NAME(g_Ped2);
-		g_Ped3 = GET_PLAYER_GROUP(g_Ped2);
+		firstLoad = false;
+		addlog(ige::LogType::LOG_TRACE, "First Load of MainMenu Submenu");
 	}
+
+	DrawTitle();
+
+	if (DrawOption("Players"))           NavigateTo("players");
+	if (DrawOption("Player Options"))    NavigateTo("player_ops");
+	if (DrawOption("Vehicle Options"))   NavigateTo("vehicle");
+	if (DrawOption("Teleport Options"))  NavigateTo("teleport");
+	if (DrawOption("Weapon Options"))    NavigateTo("weapon");
+	if (DrawOption("Weather Options"))   NavigateTo("weather");
+	if (DrawOption("Time Options"))      NavigateTo("time");
+	if (DrawOption("Bodyguard Options")) NavigateTo("bodyguard");
+	if (DrawOption("Object Spooner"))    NavigateTo("spooner_main");
+	if (DrawOption("Misc Options"))      NavigateTo("misc");
+	if (DrawOption("Settings"))          NavigateTo("settings");
+	if (DrawOption("The People Behind Menyoo")) NavigateTo("credits");
+
+	g_Ped2 = PLAYER_ID();
+	g_Ped1 = PLAYER_PED_ID();
+	g_PlayerName = GET_PLAYER_NAME(g_Ped2);
+	g_Ped3 = GET_PLAYER_GROUP(g_Ped2);
 }
 
-
-#include "..\Menu\submenu_switch.h"
-#include "..\Menu\submenu_enum.h"
-REGISTER_SUBMENU(MAINMENU, sub::MainMenu)
-
-
-
+}
+REGISTER_SUBMENU(::Menu::MainMenuSubmenu)

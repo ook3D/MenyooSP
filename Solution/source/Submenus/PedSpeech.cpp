@@ -1,13 +1,169 @@
-/*
-* Menyoo PC - Grand Theft Auto V single-player trainer mod
-* Copyright (C) 2019  MAFINS
-*
-* This program is free software: you can redistribute it and/or modify
-* it under the terms of the GNU General Public License as published by
-* the Free Software Foundation, either version 3 of the License, or
-* (at your option) any later version.
-*/
 #include "PedSpeech.h"
+
+#include "../Menu/Engine.h"
+#include "../Menu/SubmenuRegistry.h"
+#include "../Menu/Menu.h"      // MenuPressTimer
+#include "../Menu/Routine.h"   // g_Ped1
+#include "PlayerRuntime.h"     // g_Ped1
+#include "Misc.h"              // dict
+
+#include "../Natives/natives2.h"
+#include "../Scripting/Game.h"
+#include "../Scripting/GTAped.h"
+#include "../Util/ExePath.h"
+
+#include <algorithm>
+#include <array>
+#include <cctype>
+#include <set>
+#include <string>
+#include <vector>
+#include <simpleini/SimpleIni.h>
+
+namespace {
+inline void toUpperInPlace(std::string& s)
+{
+	std::transform(s.begin(), s.end(), s.begin(),
+		[](unsigned char c) { return static_cast<char>(std::toupper(c)); });
+}
+inline std::string toLowerCopy(const std::string& s)
+{
+	std::string out(s);
+	std::transform(out.begin(), out.end(), out.begin(),
+		[](unsigned char c) { return static_cast<char>(std::tolower(c)); });
+	return out;
+}
+inline std::string toUpperCopy(const std::string& s)
+{
+	std::string out(s); toUpperInPlace(out); return out;
+}
+} // namespace
+
+
+namespace Menu {
+
+void VoiceChangerSubmenu::Draw()
+{
+	DrawTitle();
+
+	GTAped ped = g_Ped1;
+	if (!ped.Exists())
+	{
+		// Legacy code called Menu::SetPreviousMenu() — equivalent: go back.
+		Engine* engine = Engine::Current();
+		if (engine) engine->GoBack();
+		return;
+	}
+
+	// SEARCH row — shows current search string (uppercased) or "SEARCH" when empty.
+	std::string& searchStr = sub::Speech::searchStr;
+	const std::string searchLabel = searchStr.empty() ? std::string("SEARCH") : searchStr;
+	if (DrawOption(searchLabel))
+	{
+		searchStr = Game::InputBox(searchStr, 126U, "SEARCH", toLowerCopy(searchStr));
+		toUpperInPlace(searchStr);
+	}
+
+	for (auto& v : sub::Speech::vVoiceData)
+	{
+		if (!searchStr.empty())
+		{
+			if (toUpperCopy(v.voiceName).find(searchStr) == std::string::npos)
+				continue;
+		}
+
+		if (DrawOption(v.voiceName))
+		{
+			ped.RequestControl();
+			ped.SetVoiceName(v.voiceName);
+			Game::Print::PrintBottomCentre("Voice ~b~changed~s~.\n ~r~Note:~s~ This does not work for all peds.");
+		}
+	}
+}
+
+void SpeechPlayerSubmenu::Draw()
+{
+	DrawTitle();
+
+	GTAped ped = g_Ped1;
+	sub::Speech::_currVoiceInfo = nullptr;
+	if (!ped.Exists())
+	{
+		Engine* engine = Engine::Current();
+		if (engine) engine->GoBack();
+		return;
+	}
+
+	std::string& searchStr = sub::Speech::searchStr;
+	const std::string searchLabel = searchStr.empty() ? std::string("SEARCH") : searchStr;
+	if (DrawOption(searchLabel))
+	{
+		searchStr = Game::InputBox(searchStr, 126U, "SEARCH", toLowerCopy(searchStr));
+		toUpperInPlace(searchStr);
+	}
+
+	for (auto& v : sub::Speech::vVoiceData)
+	{
+		if (!searchStr.empty())
+		{
+			if (toUpperCopy(v.voiceName).find(searchStr) == std::string::npos)
+				continue;
+		}
+
+		if (DrawOption(v.voiceName))
+		{
+			sub::Speech::_currVoiceInfo = &v;
+			NavigateTo("ped_speech_player_in_voice");
+		}
+	}
+}
+
+void SpeechPlayerInVoiceSubmenu::Draw()
+{
+	GTAped ped = g_Ped1;
+	if (sub::Speech::_currVoiceInfo == nullptr || !ped.Exists())
+	{
+		Engine* engine = Engine::Current();
+		if (engine) engine->GoBack();
+		return;
+	}
+	auto& v = *sub::Speech::_currVoiceInfo;
+
+	// Title uses the selected voices name, not the static class Title().
+	Engine* engine = Engine::Current();
+	if (engine) engine->AddTitle(v.voiceName);
+
+	const auto& params = sub::Speech::vSpeechParams;
+	uint16_t& currParamIdx = sub::Speech::_currSpeechParamIndex;
+	if (engine)
+	{
+		const std::vector<std::string> singleEntry{ params[currParamIdx].title };
+		const ::Menu::InputResult res = engine->AddTextList("Modifier", 0, singleEntry);
+		if (res.rightPressed)
+		{
+			if (currParamIdx < static_cast<uint16_t>(params.size() - 1))
+				++currParamIdx;
+		}
+		else if (res.leftPressed)
+		{
+			if (currParamIdx > 0)
+				--currParamIdx;
+		}
+	}
+
+	for (auto& s : v.speechNames)
+	{
+		if (DrawOption(s))
+		{
+			ped.PlaySpeechWithVoice(s, v.voiceName, params[currParamIdx].label);
+		}
+	}
+}
+
+}
+REGISTER_SUBMENU(::Menu::VoiceChangerSubmenu)
+REGISTER_SUBMENU(::Menu::SpeechPlayerSubmenu)
+REGISTER_SUBMENU(::Menu::SpeechPlayerInVoiceSubmenu)
 
 namespace sub
 {
@@ -351,116 +507,5 @@ namespace sub
 			}
 			return true;
 		}
-
-		void VoiceChangerMenu()
-		{
-			GTAped ped = g_Ped1;
-			if (!ped.Exists())
-			{
-				Menu::SetPreviousMenu();
-				return;
-			}
-
-			bool pressed = false;
-			AddTitle("Voice Changer");
-
-			bool searchPressed = false;
-			AddOption(searchStr.empty() ? "SEARCH" : searchStr, searchPressed, nullFunc, -1, true); 
-			if (searchPressed)
-			{
-				searchStr = Game::InputBox(searchStr, 126U, "SEARCH", boost::to_lower_copy(searchStr));
-				boost::to_upper(searchStr);
-			}
-
-			for (auto& v : vVoiceData)
-			{
-				if (!searchStr.empty()) 
-				{ 
-					if (boost::to_upper_copy(v.voiceName).find(searchStr) == std::string::npos) 
-					{
-						continue;
-					}
-				}
-
-				pressed = false;
-				AddOption(v.voiceName, pressed); 
-				if (pressed)
-				{
-					ped.RequestControl();
-					ped.SetVoiceName(v.voiceName);
-					Game::Print::PrintBottomCentre("Voice ~b~changed~s~.\n ~r~Note:~s~ This does not work for all peds.");
-				}
-			}
-		}
-
-		void AmbientSpeechPlayerMenu()
-		{
-			GTAped ped = g_Ped1;
-			_currVoiceInfo = nullptr;
-			if (!ped.Exists())
-			{
-				Menu::SetPreviousMenu();
-				return;
-			}
-
-			AddTitle("Speech");
-
-			bool searchPressed = false;
-			AddOption(searchStr.empty() ? "SEARCH" : searchStr, searchPressed, nullFunc, -1, true); 
-			if (searchPressed)
-			{
-				searchStr = Game::InputBox(searchStr, 126U, "SEARCH", boost::to_lower_copy(searchStr));
-				boost::to_upper(searchStr);
-			}
-
-			for (auto& v : vVoiceData)
-			{
-				if (!searchStr.empty()) { if (boost::to_upper_copy(v.voiceName).find(searchStr) == std::string::npos) continue; }
-
-				bool bVoicePressed = false;
-				AddOption(v.voiceName, bVoicePressed); if (bVoicePressed)
-				{
-					_currVoiceInfo = &v;
-					Menu::SetSub_delayed = SUB::SPEECHPLAYER_INVOICE;
-				}
-			}
-
-		}
-		void Sub_AmbientSpeechPlayer_InVoice()
-		{
-			GTAped ped = g_Ped1;
-			if (_currVoiceInfo == nullptr || !ped.Exists())
-			{
-				Menu::SetPreviousMenu();
-				return;
-			}
-			auto& v = *_currVoiceInfo;
-
-			AddTitle(v.voiceName);
-
-			bool bSpeechParam_plus = false, bSpeechParam_minus = false;
-			AddTexter("Modifier", 0, std::vector<std::string>{ vSpeechParams[_currSpeechParamIndex].title }, null, bSpeechParam_plus, bSpeechParam_minus);
-			if (bSpeechParam_plus) { if (_currSpeechParamIndex < vSpeechParams.size() - 1) _currSpeechParamIndex++; }
-			if (bSpeechParam_minus) { if (_currSpeechParamIndex > 0) _currSpeechParamIndex--; }
-
-			for (auto& s : v.speechNames)
-			{
-				bool bSpeechPressed = false;
-				AddOption(s, bSpeechPressed); if (bSpeechPressed)
-				{
-					ped.PlaySpeechWithVoice(s, v.voiceName, vSpeechParams[_currSpeechParamIndex].label);
-				}
-			}
-		}
-
 	}
-
 }
-
-
-
-#include "..\Menu\submenu_switch.h"
-#include "..\Menu\submenu_enum.h"
-REGISTER_SUBMENU(VOICECHANGER,            sub::Speech::VoiceChangerMenu)
-REGISTER_SUBMENU(SPEECHPLAYER,            sub::Speech::AmbientSpeechPlayerMenu)
-REGISTER_SUBMENU(SPEECHPLAYER_INVOICE,    sub::Speech::Sub_AmbientSpeechPlayer_InVoice)

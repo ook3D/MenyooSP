@@ -1,54 +1,71 @@
-/*
-* Menyoo PC - Grand Theft Auto V single-player trainer mod
-* Copyright (C) 2019  MAFINS
-*
-* This program is free software: you can redistribute it and/or modify
-* it under the terms of the GNU General Public License as published by
-* the Free Software Foundation, either version 3 of the License, or
-* (at your option) any later version.
-*/
 #pragma once
 
-#include "..\macros.h"
+#include "../Menu/Submenu.h"
 
-#include "..\Menu\Menu.h"
-#include "..\Menu\Routine.h"
-#include "..\Menu\MenuConfig.h"
-#include "..\Menu\Language.h"
+namespace Menu {
 
-#include "..\Natives\natives2.h"
-#include "..\Util\GTAmath.h"
-#include "..\Natives\types.h" // RGBA
-#include "..\Scripting\enums.h"
-#include "..\Scripting\Game.h"
-
-#include <string>
-#include <math.h>
-
-typedef signed char INT8;
-typedef unsigned char UINT8;
-
-class RGBA;
-
-namespace sub
+class SettingsSubmenu final : public ::Menu::Submenu
 {
-	void Settings();
+public:
+	const char* Id() const override    { return "settings"; }
+	const char* Title() const override { return "Settings"; }
+	void Draw() override;
+};
 
-	void SettingsMenuPos();
-	extern UINT8 settingsHUDColor;
+class SettingsMenuPosSubmenu final : public ::Menu::Submenu
+{
+public:
+	const char* Id() const override    { return "settings_menupos"; }
+	const char* Title() const override { return "Menu Position"; }
+	void Draw() override;
+};
 
-	void AddsettingscolOption(const std::string& text, RGBA& feature);
-	void SettingsColours();
-	void SettingsColours2();
+class SettingsThemesSubmenu final : public ::Menu::Submenu
+{
+public:
+	const char* Id() const override    { return "settings_themes"; }
+	const char* Title() const override { return "Themes"; }
+	void Draw() override;
+};
 
-	void AddsettingsfonOption(const std::string& text, int font_index, INT8& feature);
-	void SettingsFonts();
-	void SettingsFonts2();
+class SettingsColoursSubmenu final : public ::Menu::Submenu
+{
+public:
+	const char* Id() const override    { return "settings_colours"; }
+	const char* Title() const override { return "Menu Colours"; }
+	void Draw() override;
+};
 
-	void SettingsLanguage();
-	void SettingsThemesMain();
+class SettingsColours2Submenu final : public ::Menu::Submenu
+{
+public:
+	const char* Id() const override    { return "settings_colours2"; }
+	const char* Title() const override { return "Set Colour"; }
+	void Draw() override;
+};
+
+class SettingsFontsSubmenu final : public ::Menu::Submenu
+{
+public:
+	const char* Id() const override    { return "settings_fonts"; }
+	const char* Title() const override { return "Menu Fonts"; }
+	void Draw() override;
+};
+
+class SettingsFonts2Submenu final : public ::Menu::Submenu
+{
+public:
+	const char* Id() const override    { return "settings_fonts2"; }
+	const char* Title() const override { return "Set Font"; }
+	void Draw() override;
+};
+
+class SettingsLanguageSubmenu final : public ::Menu::Submenu
+{
+public:
+	const char* Id() const override    { return "settings_language"; }
+	const char* Title() const override { return "Language"; }
+	void Draw() override;
+};
+
 }
-
-
-
-

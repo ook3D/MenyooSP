@@ -13,6 +13,8 @@
 #include "..\..\macros.h"
 
 #include "..\..\Menu\Menu.h"
+#include "..\..\Menu\Engine.h"
+#include "..\..\Menu\GlobalEngine.h"
 //#include "..\..\Menu\Routine.h"
 
 #include "..\..\Natives\natives2.h"
@@ -38,7 +40,7 @@
 #include "Databases.h"
 #include "SpoonerMarker.h"
 #include "MarkerManagement.h"
-#include "Submenus.h"
+#include "SpoonerShared.h"
 
 #include <utility>
 #include <set>
@@ -81,7 +83,7 @@ namespace sub::Spooner
 
 		bool IsHotkeyPressed()
 		{
-			if (std::find(std::begin(Menu::currentArray), std::end(Menu::currentArray), SUB::SPOONER_MAIN) == std::end(Menu::currentArray))
+			if (!Menu::GlobalEngine().IsInSubmenuFamily("spooner_"))
 			{
 				UINT8 index1 = bindsGamepad.first < 50 ? 0 : 2;
 				UINT8 index2 = bindsGamepad.second < 50 ? 0 : 2;
@@ -340,23 +342,17 @@ namespace sub::Spooner
 						freeCam.SetRotation(nextRotFinal);
 					}
 
-					if (Menu::currentsub == SUB::CLOSED)
+					if (!Menu::GlobalEngine().IsOpen())
 					{
-						Menu::add_IB(INPUT_VEH_EXIT, "Open main menu");
+						Menu::AddIB(INPUT_VEH_EXIT, "Open main menu");
 						if (IS_DISABLED_CONTROL_JUST_PRESSED(2, INPUT_VEH_EXIT))
 						{
-							memset(Menu::currentArray, 0, sizeof(Menu::currentArray));
-							memset(Menu::currentop_ar, 0, sizeof(Menu::currentop_ar));
-							Menu::currentArray[0] = SUB::MAINMENU;
-							Menu::currentop_ar[0] = 1;
-							Menu::currentArrayIndex = 0;
-							Menu::NewSetMenu(SUB::SPOONER_MAIN);
-							Menu::currentop = 2;
+							Menu::GlobalEngine().OpenAt("spooner_main", 2);
 						}
 
 						if (!bIsSomethingHeld)
 						{
-							Menu::add_IB(INPUT_FRONTEND_DOWN, "Place Marker");
+							Menu::AddIB(INPUT_FRONTEND_DOWN, "Place Marker");
 							if (IS_DISABLED_CONTROL_JUST_PRESSED(2, INPUT_FRONTEND_DOWN))
 							{
 								auto newMarkerPtr = MarkerManagement::AddMarker(coordInFrontOfCam, Vector3(0, 0, freeCam.GetRotation().z));
@@ -364,12 +360,7 @@ namespace sub::Spooner
 								{
 									newMarkerPtr->m_position.z += (newMarkerPtr->m_scale / 2);
 									SelectedMarker = newMarkerPtr;
-									memset(Menu::currentArray, 0, sizeof(Menu::currentArray));
-									memset(Menu::currentop_ar, 0, sizeof(Menu::currentop_ar));
-									Menu::currentArray[0] = SUB::MAINMENU;
-									Menu::currentop_ar[0] = 1;
-									Menu::currentArrayIndex = 0;
-									Menu::NewSetMenu(SUB::SPOONER_MANAGEMARKERS_INMARKER);
+									Menu::GlobalEngine().OpenAt("spooner_manage_markers_in_marker");
 								}
 							}
 						}
@@ -466,27 +457,27 @@ namespace sub::Spooner
 								break;
 							}
 
-							if (Menu::currentsub == SUB::CLOSED)
+							if (!Menu::GlobalEngine().IsOpen())
 							{
-								Menu::add_IB(INPUT_FRONTEND_RT, "Open property menu");
+								Menu::AddIB(INPUT_FRONTEND_RT, "Open property menu");
 								switch (spoonerModeMode)
 								{
 								case eSpoonerModeMode::GroundEase:
-									Menu::add_IB(INPUT_FRONTEND_RS, "");
-									Menu::add_IB(INPUT_FRONTEND_LS, "Adjust pitch rotation");
+									Menu::AddIB(INPUT_FRONTEND_RS, "");
+									Menu::AddIB(INPUT_FRONTEND_LS, "Adjust pitch rotation");
 									break;
 								case eSpoonerModeMode::Precision:
-									Menu::add_IB(INPUT_FRONTEND_RS, "");
-									Menu::add_IB(INPUT_FRONTEND_LS, "Zoom camera in/out");
+									Menu::AddIB(INPUT_FRONTEND_RS, "");
+									Menu::AddIB(INPUT_FRONTEND_LS, "Zoom camera in/out");
 									break;
 								}
-								Menu::add_IB(INPUT_FRONTEND_RB, "");
-								Menu::add_IB(INPUT_FRONTEND_LB, "Adjust roll rotation");
-								Menu::add_IB(INPUT_FRONTEND_RIGHT, "Copy (and add to DB)");
-								Menu::add_IB(INPUT_FRONTEND_LEFT, "Delete");
+								Menu::AddIB(INPUT_FRONTEND_RB, "");
+								Menu::AddIB(INPUT_FRONTEND_LB, "Adjust roll rotation");
+								Menu::AddIB(INPUT_FRONTEND_RIGHT, "Copy (and add to DB)");
+								Menu::AddIB(INPUT_FRONTEND_LEFT, "Delete");
 								if (!isInDb)
 								{
-									Menu::add_IB(INPUT_FRONTEND_UP, "Add to Database");
+									Menu::AddIB(INPUT_FRONTEND_UP, "Add to Database");
 									if (IS_DISABLED_CONTROL_JUST_PRESSED(2, INPUT_FRONTEND_UP))
 									{
 										EntityManagement::AddEntityToDb(selectedEntity);
@@ -525,15 +516,15 @@ namespace sub::Spooner
 							}
 							bIsSomethingHeld = false;
 
-							if (Menu::currentsub == SUB::CLOSED)
+							if (!Menu::GlobalEngine().IsOpen())
 							{
-								Menu::add_IB(INPUT_FRONTEND_RT, "Open property menu");
-								Menu::add_IB(INPUT_FRONTEND_LT, "Move entity around (hold)");
-								Menu::add_IB(INPUT_FRONTEND_RIGHT, "Copy (and add to DB)");
-								Menu::add_IB(INPUT_FRONTEND_LEFT, "Delete");
+								Menu::AddIB(INPUT_FRONTEND_RT, "Open property menu");
+								Menu::AddIB(INPUT_FRONTEND_LT, "Move entity around (hold)");
+								Menu::AddIB(INPUT_FRONTEND_RIGHT, "Copy (and add to DB)");
+								Menu::AddIB(INPUT_FRONTEND_LEFT, "Delete");
 								if (!isInDb)
 								{
-									Menu::add_IB(INPUT_FRONTEND_UP, "Add to Database");
+									Menu::AddIB(INPUT_FRONTEND_UP, "Add to Database");
 									if (IS_DISABLED_CONTROL_JUST_PRESSED(2, INPUT_FRONTEND_UP))
 									{
 										EntityManagement::AddEntityToDb(GetEntityPtrValue(currentEnt));
@@ -561,12 +552,7 @@ namespace sub::Spooner
 							{
 								SpoonerMode::SetAsSelectedEntity(currentEnt);
 							}
-							memset(Menu::currentArray, 0, sizeof(Menu::currentArray));
-							memset(Menu::currentop_ar, 0, sizeof(Menu::currentop_ar));
-							Menu::currentArray[0] = SUB::MAINMENU;
-							Menu::currentop_ar[0] = 1;
-							Menu::currentArrayIndex = 0;
-							Menu::NewSetMenu(SUB::SPOONER_SELECTEDENTITYOPS);
+							Menu::GlobalEngine().OpenAt("spooner_selected_entity_ops");
 						}
 					}
 					else
@@ -626,23 +612,17 @@ namespace sub::Spooner
 						freeCam.SetRotation(nextRotFinal);
 					}
 
-					if (Menu::currentsub == SUB::CLOSED)
+					if (!Menu::GlobalEngine().IsOpen())
 					{
-						Menu::add_IB(INPUT_VEH_EXIT, "Open main menu");
+						Menu::AddIB(INPUT_VEH_EXIT, "Open main menu");
 						if (IS_DISABLED_CONTROL_JUST_PRESSED(2, INPUT_VEH_EXIT))
 						{
-							memset(Menu::currentArray, 0, sizeof(Menu::currentArray));
-							memset(Menu::currentop_ar, 0, sizeof(Menu::currentop_ar));
-							Menu::currentArray[0] = SUB::MAINMENU;
-							Menu::currentop_ar[0] = 1;
-							Menu::currentArrayIndex = 0;
-							Menu::NewSetMenu(SUB::SPOONER_MAIN);
-							Menu::currentop = 2;
+							Menu::GlobalEngine().OpenAt("spooner_main", 2);
 						}
 
 						if (!bIsSomethingHeld)
 						{
-							Menu::add_IB(VirtualKey::M, "Place Marker");
+							Menu::AddIB(VirtualKey::M, "Place Marker");
 							if (IsKeyJustUp(VirtualKey::M))
 							{
 								auto newMarkerPtr = MarkerManagement::AddMarker(coordInFrontOfCam, Vector3(0, 0, freeCam.GetRotation().z));
@@ -650,12 +630,7 @@ namespace sub::Spooner
 								{
 									newMarkerPtr->m_position.z += (newMarkerPtr->m_scale / 2);
 									SelectedMarker = newMarkerPtr;
-									memset(Menu::currentArray, 0, sizeof(Menu::currentArray));
-									memset(Menu::currentop_ar, 0, sizeof(Menu::currentop_ar));
-									Menu::currentArray[0] = SUB::MAINMENU;
-									Menu::currentop_ar[0] = 1;
-									Menu::currentArrayIndex = 0;
-									Menu::NewSetMenu(SUB::SPOONER_MANAGEMARKERS_INMARKER);
+									Menu::GlobalEngine().OpenAt("spooner_manage_markers_in_marker");
 								}
 							}
 						}
@@ -753,29 +728,29 @@ namespace sub::Spooner
 								break;
 							}
 
-							if (Menu::currentsub == SUB::CLOSED)
+							if (!Menu::GlobalEngine().IsOpen())
 							{
-								Menu::add_IB(INPUT_CURSOR_CANCEL, "Open property menu");
+								Menu::AddIB(INPUT_CURSOR_CANCEL, "Open property menu");
 								switch (spoonerModeMode)
 								{
 								case eSpoonerModeMode::GroundEase:
-									Menu::add_IB(INPUT_CURSOR_SCROLL_DOWN, "");
-									Menu::add_IB(INPUT_CURSOR_SCROLL_UP, "Adjust pitch rotation");
+									Menu::AddIB(INPUT_CURSOR_SCROLL_DOWN, "");
+									Menu::AddIB(INPUT_CURSOR_SCROLL_UP, "Adjust pitch rotation");
 									break;
 								case eSpoonerModeMode::Precision:
-									Menu::add_IB(INPUT_CURSOR_SCROLL_DOWN, "");
-									Menu::add_IB(INPUT_CURSOR_SCROLL_UP, "Zoom camera in/out");
-									Menu::add_IB(VirtualKey::Z, "");
-									Menu::add_IB(VirtualKey::X, "Ascend/Descend");
+									Menu::AddIB(INPUT_CURSOR_SCROLL_DOWN, "");
+									Menu::AddIB(INPUT_CURSOR_SCROLL_UP, "Zoom camera in/out");
+									Menu::AddIB(VirtualKey::Z, "");
+									Menu::AddIB(VirtualKey::X, "Ascend/Descend");
 									break;
 								}
-								Menu::add_IB(INPUT_PARACHUTE_BRAKE_RIGHT, "");
-								Menu::add_IB(INPUT_PARACHUTE_BRAKE_LEFT, "Adjust roll rotation");
-								Menu::add_IB(INPUT_LOOK_BEHIND, "Copy (and add to DB)");
-								Menu::add_IB(INPUT_CREATOR_DELETE, "Delete");
+								Menu::AddIB(INPUT_PARACHUTE_BRAKE_RIGHT, "");
+								Menu::AddIB(INPUT_PARACHUTE_BRAKE_LEFT, "Adjust roll rotation");
+								Menu::AddIB(INPUT_LOOK_BEHIND, "Copy (and add to DB)");
+								Menu::AddIB(INPUT_CREATOR_DELETE, "Delete");
 								if (!isInDb)
 								{
-									Menu::add_IB(INPUT_FRONTEND_UP, "Add to Database");
+									Menu::AddIB(INPUT_FRONTEND_UP, "Add to Database");
 									if (IS_DISABLED_CONTROL_JUST_PRESSED(2, INPUT_FRONTEND_UP))
 									{
 										EntityManagement::AddEntityToDb(selectedEntity);
@@ -814,15 +789,15 @@ namespace sub::Spooner
 							}
 							bIsSomethingHeld = false;
 
-							if (Menu::currentsub == SUB::CLOSED)
+							if (!Menu::GlobalEngine().IsOpen())
 							{
-								Menu::add_IB(INPUT_CURSOR_CANCEL, "Open property menu");
-								Menu::add_IB(INPUT_CURSOR_ACCEPT, "Move entity around (hold)");
-								Menu::add_IB(INPUT_LOOK_BEHIND, "Copy (and add to DB)");
-								Menu::add_IB(INPUT_CREATOR_DELETE, "Delete");
+								Menu::AddIB(INPUT_CURSOR_CANCEL, "Open property menu");
+								Menu::AddIB(INPUT_CURSOR_ACCEPT, "Move entity around (hold)");
+								Menu::AddIB(INPUT_LOOK_BEHIND, "Copy (and add to DB)");
+								Menu::AddIB(INPUT_CREATOR_DELETE, "Delete");
 								if (!isInDb)
 								{
-									Menu::add_IB(INPUT_FRONTEND_UP, "Add to Database");
+									Menu::AddIB(INPUT_FRONTEND_UP, "Add to Database");
 									if (IS_DISABLED_CONTROL_JUST_PRESSED(2, INPUT_FRONTEND_UP))
 									{
 										EntityManagement::AddEntityToDb(GetEntityPtrValue(currentEnt));
@@ -850,12 +825,7 @@ namespace sub::Spooner
 							{
 								SpoonerMode::SetAsSelectedEntity(currentEnt);
 							}
-							memset(Menu::currentArray, 0, sizeof(Menu::currentArray));
-							memset(Menu::currentop_ar, 0, sizeof(Menu::currentop_ar));
-							Menu::currentArray[0] = SUB::MAINMENU;
-							Menu::currentop_ar[0] = 1;
-							Menu::currentArrayIndex = 0;
-							Menu::NewSetMenu(SUB::SPOONER_SELECTEDENTITYOPS);
+							Menu::GlobalEngine().OpenAt("spooner_selected_entity_ops");
 						}
 					}
 					// does not draw the cursor when inside gizmo entity editing mode.
@@ -910,7 +880,7 @@ namespace sub::Spooner
 			{
 				SpoonerMode::bEnabled = true;
 				sub::Spooner::ImGuiSpooner::SetVisible(true);
-				if (Menu::currentsub != SUB::CLOSED)
+				if (Menu::GlobalEngine().IsOpen())
 					Game::Print::PrintBottomLeft("~b~Note:~s~ Spooner Mode instructions only appear when Menyoo is closed.");
 			}
 			else

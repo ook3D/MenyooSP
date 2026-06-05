@@ -1,19 +1,43 @@
-/*
-* Menyoo PC - Grand Theft Auto V single-player trainer mod
-* Copyright (C) 2019  MAFINS
-*
-* This program is free software: you can redistribute it and/or modify
-* it under the terms of the GNU General Public License as published by
-* the Free Software Foundation, either version 3 of the License, or
-* (at your option) any later version.
-*/
 #include "AnimalRiding.h"
 
+#include "../Menu/SubmenuRegistry.h"
+
+#include "PlayerRuntime.h"
+
+#include "../Scripting/ModelNames.h"
+#include "../Scripting/WeaponIndivs.h"
+
+namespace Menu {
+
+void AnimalRidingSubmenu::Draw()
+{
+	DrawTitle();
+
+	if (DrawToggleExternal("Toggle", sub::AnimalRiding::Enabled()))
+		sub::AnimalRiding::ToggleOnOff();
+
+	DrawBreak("---Spawn A Ride---");
+	for (const sub::AnimalRiding::AnimalAndSeat& a : sub::AnimalRiding::vAnimals)
+	{
+		if (DrawOption(GetPedModelLabel(a.model, true)))
+		{
+			sub::AnimalRiding::SpawnAnimalRide(a.model);
+		}
+	}
+
+	DrawBreak("---Animal Data---");
+	if (DrawOption("Reload Data From File"))
+		sub::AnimalRiding::PopulateAnimals();
+}
+
+}
+REGISTER_SUBMENU(::Menu::AnimalRidingSubmenu)
+
+// ---- Migrated from AnimalRiding.cpp ----
 namespace sub
 {
 	namespace AnimalRiding
 	{
-		struct AnimalAndSeat { Model model; int attachBone; Vector3 position; Vector3 rotation; };
 		std::vector<AnimalAndSeat> vAnimals
 		{
 			{ PedHash::Deer, 24816, Vector3(-0.3f, 0.0f, 0.3f), Vector3(180.0f, 0.0f, 90.0f) },
@@ -136,7 +160,7 @@ namespace sub
 				switch (a.model.hash)
 				{
 					default:
-					case PedHash::MountainLion: 
+					case PedHash::MountainLion:
 						myHumanPed.Task().PlayAnimation("rcmjosh2", "josh_sitting_loop", 4.0f, -4.0f, -1, 1, 0, false); break;
 				}
 
@@ -234,29 +258,5 @@ namespace sub
 			seq.Clear();
 			model.Unload();
 		}
-
-		void AnimalRidingMenu()
-		{
-			AddTitle("Animal Riding");
-			AddLocal("Toggle", AnimalRiding::g_animalRidingMode.Enabled(), AnimalRiding::ToggleOnOff, AnimalRiding::ToggleOnOff);
-
-			AddBreak("---Spawn A Ride---");
-			for (auto& a : vAnimals)
-			{
-				bool bSpawnRidePressed = false;
-				AddOption(GetPedModelLabel(a.model, true), bSpawnRidePressed); if (bSpawnRidePressed)
-				{
-					AnimalRiding::SpawnAnimalRide(a.model);
-				}
-			}
-
-			AddBreak("---Animal Data---");
-			AddOption("Reload Data From File", null, PopulateAnimals);
-		}
 	}
 }
-
-
-#include "..\Menu\submenu_switch.h"
-#include "..\Menu\submenu_enum.h"
-REGISTER_SUBMENU(ANIMALRIDING,         sub::AnimalRiding::AnimalRidingMenu)

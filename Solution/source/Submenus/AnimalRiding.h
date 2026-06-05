@@ -1,13 +1,6 @@
-/*
-* Menyoo PC - Grand Theft Auto V single-player trainer mod
-* Copyright (C) 2019  MAFINS
-*
-* This program is free software: you can redistribute it and/or modify
-* it under the terms of the GNU General Public License as published by
-* the Free Software Foundation, either version 3 of the License, or
-* (at your option) any later version.
-*/
 #pragma once
+
+#include "../Menu/Submenu.h"
 
 #include "..\macros.h"
 
@@ -36,10 +29,31 @@ namespace sub
 {
 	namespace AnimalRiding
 	{
+		struct AnimalAndSeat
+		{
+			Model model;
+			int attachBone;
+			Vector3 position;
+			Vector3 rotation;
+		};
+		extern std::vector<AnimalAndSeat> vAnimals;
+
 		void PopulateAnimals();
 		void ToggleOnOff();
 		void Tick();
 		bool& Enabled();
-		void AnimalRidingMenu();
+		void SpawnAnimalRide(const Model& model);
 	}
+}
+
+namespace Menu {
+
+class AnimalRidingSubmenu final : public ::Menu::Submenu
+{
+public:
+	const char* Id() const override    { return "animal_riding"; }
+	const char* Title() const override { return "Animal Riding"; }
+	void Draw() override;
+};
+
 }

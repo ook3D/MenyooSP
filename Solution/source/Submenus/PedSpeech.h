@@ -1,30 +1,10 @@
-/*
-* Menyoo PC - Grand Theft Auto V single-player trainer mod
-* Copyright (C) 2019  MAFINS
-*
-* This program is free software: you can redistribute it and/or modify
-* it under the terms of the GNU General Public License as published by
-* the Free Software Foundation, either version 3 of the License, or
-* (at your option) any later version.
-*/
 #pragma once
 
-#include "..\macros.h"
-
-#include "..\Menu\Menu.h"
-#include "..\Menu\Routine.h"
-
-#include "..\Natives\natives2.h"
-#include "..\Util\ExePath.h"
-#include "..\Scripting\GTAped.h"
-#include "..\Scripting\Game.h"
-#include "..\Util\StringManip.h"
+#include "../Menu/Submenu.h"
 
 #include <string>
 #include <array>
 #include <vector>
-#include <set>
-#include <simpleini\SimpleIni.h>
 
 typedef unsigned short uint16_t;
 
@@ -49,16 +29,36 @@ namespace sub
 		extern std::vector<AmbientVoice_t> vVoiceData;
 		extern AmbientVoice_t* _currVoiceInfo;
 		extern uint16_t _currSpeechParamIndex;
+		extern std::string& searchStr; // alias of Routine.h `dict2`; shared search buffer
 
 		bool PopulateVoiceData();
-		void VoiceChangerMenu();
-		void AmbientSpeechPlayerMenu();
-		void Sub_AmbientSpeechPlayer_InVoice();
-
 	}
-
 }
 
+namespace Menu {
 
+class VoiceChangerSubmenu final : public ::Menu::Submenu
+{
+public:
+	const char* Id() const override    { return "ped_voice_changer"; }
+	const char* Title() const override { return "Voice Changer"; }
+	void Draw() override;
+};
 
+class SpeechPlayerSubmenu final : public ::Menu::Submenu
+{
+public:
+	const char* Id() const override    { return "ped_speech_player"; }
+	const char* Title() const override { return "Speech"; }
+	void Draw() override;
+};
 
+class SpeechPlayerInVoiceSubmenu final : public ::Menu::Submenu
+{
+public:
+	const char* Id() const override    { return "ped_speech_player_in_voice"; }
+	const char* Title() const override { return "Voice"; }
+	void Draw() override;
+};
+
+}

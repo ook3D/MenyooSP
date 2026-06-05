@@ -1,13 +1,6 @@
-/*
-* Menyoo PC - Grand Theft Auto V single-player trainer mod
-* Copyright (C) 2019  MAFINS
-*
-* This program is free software: you can redistribute it and/or modify
-* it under the terms of the GNU General Public License as published by
-* the Free Software Foundation, either version 3 of the License, or
-* (at your option) any later version.
-*/
 #pragma once
+
+#include "../Menu/Submenu.h"
 
 #include "..\macros.h"
 
@@ -28,7 +21,7 @@
 
 typedef unsigned __int8 UINT8;
 
-namespace PTFX 
+namespace PTFX
 {
 	class LoopedPTFX;
 }
@@ -43,13 +36,19 @@ namespace sub
 		extern BreathePtfxType playerBreatheStuff;
 
 		void SetSelfBreathePTFX(const BreathePtfxType& type);
-		void AddOption(const std::string& text, const BreathePtfxType& type);
-		void BreatheStuffMenu();
 
 	}
 
 }
 
+namespace Menu {
 
+class BreatheStuffSubmenu final : public ::Menu::Submenu
+{
+public:
+	const char* Id() const override    { return "breathe_stuff"; }
+	const char* Title() const override { return "Breathe StufF"; }
+	void Draw() override;
+};
 
-
+}

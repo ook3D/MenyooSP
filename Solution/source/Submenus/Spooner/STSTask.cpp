@@ -14,7 +14,7 @@
 #include "..\..\Scripting\GTAentity.h"
 #include "..\..\Scripting\GTAped.h"
 
-#include "Submenus_TaskSequence.h"
+#include "SpoonerTaskSequenceStubs.h"
 
 #include <string>
 #include <vector>

@@ -40,6 +40,7 @@
 #include "Rope.h"
 
 #include "..\Menu\Routine.h"
+#include "..\Menu\Ticks.h" // UpdateNearbyStuffArraysTick
 
 #include "..\Submenus\Spooner\EntityManagement.h"
 

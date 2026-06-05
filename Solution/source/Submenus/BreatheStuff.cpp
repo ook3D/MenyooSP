@@ -1,13 +1,40 @@
-/*
-* Menyoo PC - Grand Theft Auto V single-player trainer mod
-* Copyright (C) 2019  MAFINS
-*
-* This program is free software: you can redistribute it and/or modify
-* it under the terms of the GNU General Public License as published by
-* the Free Software Foundation, either version 3 of the License, or
-* (at your option) any later version.
-*/
 #include "BreatheStuff.h"
+
+#include "../Menu/SubmenuRegistry.h"
+#include "../Menu/Menu.h"      // Menu::bitController
+
+#include "../Scripting/Game.h"
+#include "../Scripting/PTFX.h"
+
+namespace Menu {
+
+void BreatheStuffSubmenu::Draw()
+{
+	DrawTitle();
+
+	for (const auto& bsfxn : sub::BreatheStuff::captionsBreatheStuff)
+	{
+		const bool isCurrent = (bsfxn.second == sub::BreatheStuff::playerBreatheStuff);
+		if (DrawSelectionItem(bsfxn.first, isCurrent))
+		{
+			if (sub::BreatheStuff::playerBreatheStuff == sub::BreatheStuff::BreathePtfxType::None
+				&& bsfxn.second != sub::BreatheStuff::BreathePtfxType::None)
+			{
+				Game::Print::PrintBottomLeft(oss_ << "Hold " << "~b~"
+					<< (Menu::bitController ? "LS" : "J") << "~s~"
+					<< " to breathe out stuff!");
+			}
+
+			if (sub::BreatheStuff::g_breatheStuffPTFX.Exists())
+				sub::BreatheStuff::g_breatheStuffPTFX.Remove();
+
+			sub::BreatheStuff::playerBreatheStuff = bsfxn.second;
+		}
+	}
+}
+
+}
+REGISTER_SUBMENU(::Menu::BreatheStuffSubmenu)
 
 namespace sub
 {
@@ -301,38 +328,5 @@ namespace sub
 				ptfx.SetColour(RgbS::Random());
 			}
 		}
-
-
-		void AddOption(const std::string& text, const BreathePtfxType& type)
-		{
-			null = 0;
-			AddTickol(text, type == playerBreatheStuff, null, null); if (null)
-			{
-				if (playerBreatheStuff == BreathePtfxType::None && type != BreathePtfxType::None)
-				{
-					Game::Print::PrintBottomLeft(oss_ << "Hold " << "~b~" << (Menu::bitController ? "LS" : "J") << "~s~" << " to breathe out stuff!");
-				}
-
-				if (g_breatheStuffPTFX.Exists())
-				{
-					g_breatheStuffPTFX.Remove();
-				}
-
-				playerBreatheStuff = type;
-			}
-		}
-
-		void BreatheStuffMenu()
-		{
-			AddTitle("Breathe StufF");
-			for (auto& bsfxn : captionsBreatheStuff)
-			{
-				AddOption(bsfxn.first, bsfxn.second);
-			}
-		}
 	}
 }
-
-#include "..\Menu\submenu_switch.h"
-#include "..\Menu\submenu_enum.h"
-REGISTER_SUBMENU(BREATHESTUFF,            sub::BreatheStuff::BreatheStuffMenu)

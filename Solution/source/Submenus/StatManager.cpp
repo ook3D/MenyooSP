@@ -1,24 +1,331 @@
-/*
-* Menyoo PC - Grand Theft Auto V single-player trainer mod
-* Copyright (C) 2019  MAFINS
-*
-* This program is free software: you can redistribute it and/or modify
-* it under the terms of the GNU General Public License as published by
-* the Free Software Foundation, either version 3 of the License, or
-* (at your option) any later version.
-*/
 #include "StatManager.h"
+
+#include "../Menu/Engine.h"
+#include "../Menu/SubmenuRegistry.h"
+
+#include <array>
+#include <climits>
+
+namespace Menu {
+
+namespace
+{
+	using sub::SpStatManager::CharStat_t;
+	using sub::SpStatManager::StatDataType_t;
+
+	std::string FullStatName(const CharStat_t& stat)
+	{
+		const int charIdx = sub::SpStatManager::g_selectedCharIndex;
+		return sub::SpStatManager::CharStatPrefix(charIdx) + stat.name;
+	}
+}
+
+void SpStatManagerSubmenu::Draw()
+{
+	DrawTitle();
+
+	for (int i = 0; i < sub::SpStatManager::CharCount(); ++i)
+	{
+		if (DrawOption(sub::SpStatManager::CharDisplayName(i)))
+		{
+			Game::Print::PrintBottomCentre(
+				"~r~Note:~s~ Player Stats temporarily disabled while not working. Check future updates.");
+			sub::SpStatManager::g_selectedCharIndex = i;
+			NavigateTo("sp_stat_manager_in_char");
+		}
+	}
+
+	DrawBreak("---Achievements---");
+
+	if (DrawOption("Unlock All Achievements"))
+	{
+		const int numAchievements = 78;
+		for (int i = 0; i < numAchievements; ++i)
+		{
+			if (!HAS_ACHIEVEMENT_BEEN_PASSED(i))
+				GIVE_ACHIEVEMENT_TO_PLAYER(i);
+		}
+	}
+
+	auto unlockAchievement = [this](int id, const char* description)
+	{
+		if (DrawOption(std::to_string(id) + ". " + description))
+		{
+			if (!HAS_ACHIEVEMENT_BEEN_PASSED(id))
+				GIVE_ACHIEVEMENT_TO_PLAYER(id);
+		}
+	};
+
+	unlockAchievement(1, "Unlock 'Welcome to Los Santos'");
+	unlockAchievement(2, "Unlock 'A Friendship Resurrected'");
+	unlockAchievement(3, "Unlock 'A Fair Day's Pay'");
+	unlockAchievement(4, "Unlock 'The Moment of Truth'");
+	unlockAchievement(5, "Unlock 'To Live or Die in Los Santos'");
+	unlockAchievement(6, "Unlock 'Diamond Hard'");
+	unlockAchievement(7, "Unlock 'Subversive'");
+	unlockAchievement(8, "Unlock 'Blitzed'");
+	unlockAchievement(9, "Unlock 'Small Town, Big Job'");
+	unlockAchievement(10, "Unlock 'The Government Gimps'");
+	unlockAchievement(11, "Unlock 'The Big One!'");
+	unlockAchievement(12, "Unlock 'Solid Gold, Baby!'");
+	unlockAchievement(13, "Unlock 'Career Criminal'");
+	unlockAchievement(14, "Unlock 'San Andreas Sightseer'");
+	unlockAchievement(15, "Unlock 'All's Fare in Love and War'");
+	unlockAchievement(16, "Unlock 'TP Industries Arms Race'");
+	unlockAchievement(17, "Unlock 'Multi-Disciplined'");
+	unlockAchievement(18, "Unlock 'From Beyond the Stars'");
+	unlockAchievement(19, "Unlock 'A Mystery, Solved'");
+	unlockAchievement(20, "Unlock 'Waste Management'");
+	unlockAchievement(21, "Unlock 'Red Mist'");
+	unlockAchievement(22, "Unlock 'Show Off'");
+	unlockAchievement(23, "Unlock 'Kifflom!'");
+	unlockAchievement(24, "Unlock 'Three Man Army'");
+	unlockAchievement(25, "Unlock 'Out of Your Depth'");
+	unlockAchievement(26, "Unlock 'Altruist Acolyte'");
+	unlockAchievement(27, "Unlock 'A Lot of Cheddar'");
+	unlockAchievement(28, "Unlock 'Trading Pure Alpha'");
+	unlockAchievement(29, "Unlock 'Pimp My Sidearm'");
+	unlockAchievement(30, "Unlock 'Wanted: Alive Or Alive'");
+	unlockAchievement(31, "Unlock 'Los Santos Customs'");
+	unlockAchievement(32, "Unlock 'Close Shave'");
+	unlockAchievement(33, "Unlock 'Off the Plane'");
+	unlockAchievement(34, "Unlock 'Three-Bit Gangster'");
+	unlockAchievement(35, "Unlock 'Making Moves'");
+	unlockAchievement(36, "Unlock 'Above the Law'");
+	unlockAchievement(37, "Unlock 'Numero Uno'");
+	unlockAchievement(38, "Unlock 'The Midnight Club'");
+	unlockAchievement(39, "Unlock 'Unnatural Selection'");
+	unlockAchievement(40, "Unlock 'Backseat Driver'");
+	unlockAchievement(41, "Unlock 'Run Like The Wind'");
+	unlockAchievement(42, "Unlock 'Clean Sweep'");
+	unlockAchievement(43, "Unlock 'Decorated'");
+	unlockAchievement(44, "Unlock 'Stick Up Kid'");
+	unlockAchievement(45, "Unlock 'Enjoy Your Stay'");
+	unlockAchievement(46, "Unlock 'Crew Cut'");
+	unlockAchievement(47, "Unlock 'Full Refund'");
+	unlockAchievement(48, "Unlock 'Dialling Digits'");
+	unlockAchievement(49, "Unlock 'American Dream'");
+	unlockAchievement(50, "Unlock 'A New Perspective'");
+	unlockAchievement(51, "Unlock 'Be Prepared'");
+	unlockAchievement(52, "Unlock 'In the Name of Science'");
+	unlockAchievement(53, "Unlock 'Dead Presidents'");
+	unlockAchievement(54, "Unlock 'Parole Day'");
+	unlockAchievement(55, "Unlock 'Shot Caller'");
+	unlockAchievement(56, "Unlock 'Four Way'");
+	unlockAchievement(57, "Unlock 'Live a Little'");
+	unlockAchievement(58, "Unlock 'Can't Touch This'");
+	unlockAchievement(59, "Unlock 'Mastermind'");
+	unlockAchievement(60, "Unlock 'Vinewood Visionary'");
+	unlockAchievement(61, "Unlock 'Majestic'");
+	unlockAchievement(62, "Unlock 'Humans of Los Santos'");
+	unlockAchievement(63, "Unlock 'First Time Director'");
+	unlockAchievement(64, "Unlock 'Animal Lover'");
+	unlockAchievement(65, "Unlock 'Ensemble Piece'");
+	unlockAchievement(66, "Unlock 'Cult Movie'");
+	unlockAchievement(67, "Unlock 'Location Scout'");
+	unlockAchievement(68, "Unlock 'Method Actor'");
+	unlockAchievement(69, "Unlock 'Cryptozoologist'");
+	unlockAchievement(70, "Unlock 'Getting Started'");
+	unlockAchievement(71, "Unlock 'The Data Breaches'");
+	unlockAchievement(72, "Unlock 'The Bogdan Problem'");
+	unlockAchievement(73, "Unlock 'The Doomsday Scenario'");
+	unlockAchievement(74, "Unlock 'A World Worth Saving'");
+	unlockAchievement(75, "Unlock 'Orbital Obliteration'");
+	unlockAchievement(76, "Unlock 'Elitist'");
+	unlockAchievement(77, "Unlock 'Masterminds'");
+}
+
+namespace
+{
+	void DrawStatRow(const CharStat_t& stat)
+	{
+		Engine* engine = Engine::Current();
+		if (!engine) return;
+
+		const std::string statName = FullStatName(stat);
+
+		switch (stat.type)
+		{
+			case StatDataType_t::BOOL:
+			{
+				bool statValue = sub::SpStatManager::StatGetBool(statName);
+				if (engine->AddCheckbox(stat.caption, statValue,
+					Checkbox::BOXTICK, Checkbox::BOXBLANK))
+				{
+					addlog(ige::LogType::LOG_DEBUG,
+						"Toggling Stat " + stat.caption
+						+ " from " + std::string(statValue ? "true" : "false")
+						+ " to " + std::string(!statValue ? "true" : "false"));
+					statValue = !statValue;
+					sub::SpStatManager::StatSetBool(statName, statValue);
+				}
+				break;
+			}
+			case StatDataType_t::INT:
+			{
+				int statValue = sub::SpStatManager::StatGetInt(statName);
+				const ::Menu::InputResult res = engine->AddNumber(
+					stat.caption, static_cast<double>(statValue), 0);
+
+				if (res.rightPressed)
+				{
+					if (statValue < static_cast<int>(stat.max))
+					{
+						++statValue;
+						sub::SpStatManager::StatSetInt(statName, statValue);
+					}
+				}
+				else if (res.leftPressed)
+				{
+					if (statValue > static_cast<int>(stat.min))
+					{
+						--statValue;
+						sub::SpStatManager::StatSetInt(statName, statValue);
+					}
+				}
+
+				if (res.accepted)
+				{
+					const std::string inputStr = Game::InputBox(std::string(),
+						static_cast<int>(std::to_string(static_cast<int>(stat.max)).length()) + 1,
+						"Enter integer value:", std::to_string(statValue));
+					if (!inputStr.empty())
+					{
+						try
+						{
+							int parsed = std::stoi(inputStr);
+							sub::SpStatManager::StatSetInt(statName, parsed);
+							addlog(ige::LogType::LOG_TRACE,
+								"Stat " + stat.caption + " set to " + std::to_string(parsed) + " via input");
+						}
+						catch (...)
+						{
+							Game::Print::PrintErrorInvalidInput(inputStr);
+							addlog(ige::LogType::LOG_ERROR,
+								"Invalid Stat Integer for " + stat.caption + " Entered");
+						}
+					}
+				}
+				break;
+			}
+			case StatDataType_t::FLOAT:
+			{
+				float statValue = sub::SpStatManager::StatGetFloat(statName);
+				const ::Menu::InputResult res = engine->AddNumber(
+					stat.caption, static_cast<double>(statValue), 2);
+
+				if (res.rightPressed)
+				{
+					if (statValue < stat.max)
+					{
+						statValue += 0.05f;
+						sub::SpStatManager::StatSetFloat(statName, statValue);
+					}
+				}
+				else if (res.leftPressed)
+				{
+					if (statValue > stat.min)
+					{
+						statValue -= 0.05f;
+						sub::SpStatManager::StatSetFloat(statName, statValue);
+					}
+				}
+
+				if (res.accepted)
+				{
+					const std::string inputStr = Game::InputBox(std::string(), 13U,
+						"Enter floating point value:", std::to_string(statValue));
+					if (!inputStr.empty())
+					{
+						try
+						{
+							float parsed = std::stof(inputStr);
+							sub::SpStatManager::StatSetFloat(statName, parsed);
+						}
+						catch (...)
+						{
+							Game::Print::PrintErrorInvalidInput(inputStr);
+							addlog(ige::LogType::LOG_ERROR,
+								"Invalid Stat Float for " + stat.caption + " Entered");
+						}
+					}
+				}
+				break;
+			}
+			case StatDataType_t::UNKNOWN:
+			default:
+				break;
+		}
+	}
+}
+
+void SpStatManagerInCharSubmenu::Draw()
+{
+	const int charIdx = sub::SpStatManager::g_selectedCharIndex;
+	if (charIdx < 0)
+	{
+		Engine* engine = Engine::Current();
+		if (engine) engine->GoBack();
+		return;
+	}
+
+	Engine* engine = Engine::Current();
+	if (engine) engine->AddTitle(sub::SpStatManager::CharDisplayName(charIdx));
+
+	const int listCount = sub::SpStatManager::StatListCount();
+	for (int i = 0; i < listCount; ++i)
+	{
+		// Single-entry lists are rendered inline (matches legacy "Cash" row).
+		if (sub::SpStatManager::StatListSize(i) == 1)
+		{
+			DrawStatRow(sub::SpStatManager::StatListEntry(i, 0));
+		}
+		else
+		{
+			if (DrawOption(sub::SpStatManager::StatListTitle(i)))
+			{
+				sub::SpStatManager::g_selectedStatListIndex = i;
+				NavigateTo("sp_stat_manager_in_char_in_list");
+			}
+		}
+	}
+}
+
+void SpStatManagerInCharInListSubmenu::Draw()
+{
+	const int listIdx = sub::SpStatManager::g_selectedStatListIndex;
+	if (listIdx < 0)
+	{
+		Engine* engine = Engine::Current();
+		if (engine) engine->GoBack();
+		return;
+	}
+
+	Engine* engine = Engine::Current();
+	if (engine) engine->AddTitle(sub::SpStatManager::StatListTitle(listIdx));
+
+	const int statCount = sub::SpStatManager::StatListSize(listIdx);
+	for (int i = 0; i < statCount; ++i)
+	{
+		DrawStatRow(sub::SpStatManager::StatListEntry(listIdx, i));
+	}
+}
+
+}
+REGISTER_SUBMENU(::Menu::SpStatManagerSubmenu)
+REGISTER_SUBMENU(::Menu::SpStatManagerInCharSubmenu)
+REGISTER_SUBMENU(::Menu::SpStatManagerInCharInListSubmenu)
 
 namespace sub
 {
 	namespace SpStatManager
 	{
-		struct NamedCharStatList_t 
-		{ 
-			std::string title; 
-			std::vector<CharStat_t> list; 
+		struct NamedCharStatList_t
+		{
+			std::string title;
+			std::vector<CharStat_t> list;
 		};
-	
+
 		const std::array<NamedCharStatList_t, 5> vCharStatLists
 		{ {
 			{ "Cash",{
@@ -62,8 +369,22 @@ namespace sub
 			} };
 
 		std::pair<std::string, std::string> charNames[3] = { { "SP0_", "Michael" },{ "SP1_", "Franklin" },{ "SP2_", "Trevor" } };
-		std::pair<std::string, std::string>* selectedCharName;
-		const NamedCharStatList_t* selectedStatList;
+
+		// Cross-submenu selection indices used by the port.
+		int g_selectedCharIndex = -1;
+		int g_selectedStatListIndex = -1;
+
+		int CharCount() { return 3; }
+		const std::string& CharStatPrefix(int charIndex)  { return charNames[charIndex].first; }
+		const std::string& CharDisplayName(int charIndex) { return charNames[charIndex].second; }
+
+		int StatListCount() { return static_cast<int>(vCharStatLists.size()); }
+		const std::string& StatListTitle(int listIndex) { return vCharStatLists[listIndex].title; }
+		int StatListSize(int listIndex) { return static_cast<int>(vCharStatLists[listIndex].list.size()); }
+		const CharStat_t& StatListEntry(int listIndex, int statIndex)
+		{
+			return vCharStatLists[listIndex].list[statIndex];
+		}
 
 		// Setters/Getters
 		int StatGetInt(const std::string& name)
@@ -119,268 +440,5 @@ namespace sub
 			TERMINATE_ALL_SCRIPTS_WITH_THIS_NAME("stats_controller");
 			STAT_SET_STRING(GET_HASH_KEY(name), value.c_str(), 1);
 		}
-
-		void AddOptionStats(const CharStat_t& stat)
-		{
-			bool bStatValue_plus = false, bStatValue_minus = false, bStatValue_input = false;
-
-			const std::string& statName = selectedCharName->first + stat.name;
-
-			switch (stat.type)
-			{
-			case StatDataType_t::BOOL:
-			{
-				bool statValue = StatGetBool(statName);
-				AddTickol(stat.caption, statValue, bStatValue_input, bStatValue_input, TICKOL::BOXTICK, TICKOL::BOXBLANK); if (bStatValue_input)
-				{
-					addlog(ige::LogType::LOG_DEBUG, "Toggling Stat " + stat.caption + " from " + std::string(statValue ? "true" : "false") + " to " + std::string(!statValue ? "true" : "false"));
-					statValue = !statValue;
-					StatSetBool(statName, statValue);
-				}
-				break;
-			}
-			case StatDataType_t::INT:
-			{
-				int statValue = StatGetInt(statName);
-				AddNumber(stat.caption, statValue, 0, bStatValue_input, bStatValue_plus, bStatValue_minus); 
-				if (bStatValue_input)
-				{
-					std::string inputStr = Game::InputBox(std::string(), (int)std::to_string((int)stat.max).length() + 1, "Enter integer value:", std::to_string(statValue));
-					if (inputStr.length() > 0)
-					{
-						try
-						{
-							addlog(ige::LogType::LOG_DEBUG, "Setting Stat " + stat.caption + " to " + std::to_string(statValue) + " via input");
-							statValue = stoi(inputStr);
-							StatSetInt(statName, statValue);
-							addlog(ige::LogType::LOG_TRACE, "Stat " + stat.caption + " successfully set to " + std::to_string(StatGetInt(statName)) + " via input");
-						}
-						catch (...) 
-						{ 
-							Game::Print::PrintErrorInvalidInput(inputStr); 
-							addlog(ige::LogType::LOG_ERROR, "Invalid Stat Integer for " + stat.caption + " Entered");
-						}
-					}
-				}
-				if (bStatValue_plus) 
-				{ 
-					if (statValue < stat.max) 
-					{ 
-						addlog(ige::LogType::LOG_DEBUG, "Increasing Stat " + stat.caption + " from " + std::to_string(statValue) + " to " + std::to_string(statValue + 1) + " via plus button");
-						statValue += 1; 
-						StatSetInt(statName, statValue);
-						addlog(ige::LogType::LOG_TRACE, "Stat " + stat.caption + " successfully set to " + std::to_string(StatGetInt(statName)) + " via plus button");
-					} 
-				}
-				if (bStatValue_minus) 
-				{ 
-					if (statValue > stat.min) 
-					{ 
-						addlog(ige::LogType::LOG_DEBUG, "Decreasing Stat " + stat.caption + " from " + std::to_string(statValue) + " to " + std::to_string(statValue - 1) + " via minus button");
-						statValue -= 1; 
-						StatSetInt(statName, statValue);
-						addlog(ige::LogType::LOG_TRACE, "Stat " + stat.caption + " successfully set to " + std::to_string(StatGetInt(statName)) + " via minus button");
-					} 
-				}
-				break;
-			}
-			case StatDataType_t::FLOAT:
-			{
-				float statValue = StatGetFloat(statName);
-				AddNumber(stat.caption, statValue, 2, bStatValue_input, bStatValue_plus, bStatValue_minus); if (bStatValue_input)
-				{
-					std::string inputStr = Game::InputBox(std::string(), 13U, "Enter floating point value:", std::to_string(statValue));
-					if (inputStr.length() > 0)
-					{
-						try
-						{
-							addlog(ige::LogType::LOG_DEBUG, "Setting Stat " + stat.caption + " to " + inputStr + " via input");
-							statValue = stof(inputStr);
-							StatSetFloat(statName, statValue);
-						}
-						catch (...) 
-						{ 
-							Game::Print::PrintErrorInvalidInput(inputStr);
-							addlog(ige::LogType::LOG_ERROR, "Invalid Stat Float for " + stat.caption + " Entered");
-						}
-					}
-				}
-				if (bStatValue_plus) 
-				{ 
-					if (statValue < stat.max) 
-					{ 
-						addlog(ige::LogType::LOG_DEBUG, "Increasing Stat " + stat.caption + " from " + std::to_string(statValue) + " to " + std::to_string(statValue + 0.05f) + " via plus button");
-						statValue += 0.05f; 
-						StatSetInt(statName, statValue); 
-					} 
-				}
-				if (bStatValue_minus) 
-				{ 
-					if (statValue > stat.min) 
-					{ 
-						addlog(ige::LogType::LOG_DEBUG, "Decreasing Stat " + stat.caption + " from " + std::to_string(statValue) + " to " + std::to_string(statValue - 0.05f) + " via minus button");
-						statValue -= 0.05f; 
-						StatSetInt(statName, statValue); 
-					} 
-				}
-				break;
-			}
-			}
-		}
-
-		void SPStatsManagerMenu()
-		{
-			AddTitle("Stat Manager");
-
-			for (auto& charName : charNames)
-			{
-				bool bGoToCharacterPressed = false;
-				AddOption(charName.second, bGoToCharacterPressed, nullFunc, SUB::SPSTATMANAGER_INCHAR); if (bGoToCharacterPressed) // When working again. replace 2nd nullFunc with 
-				{					
-					Game::Print::PrintBottomCentre("~r~Note:~s~ Player Stats temporarily disabled while not working. Check future updates.");
-					selectedCharName = &charName;
-				}
-			}
-			
-			AddBreak("---Achievements---");
-			bool unlockAllAchievements = false;
-			AddOption("Unlock All Achievements", unlockAllAchievements); 
-			if (unlockAllAchievements)
-			{
-				int numAchievements = 78;
-				for (int i = 0; i < numAchievements; i++)
-				{
-					if (!HAS_ACHIEVEMENT_BEEN_PASSED(i))
-					{
-						GIVE_ACHIEVEMENT_TO_PLAYER(i);
-					}
-				}
-			}
-
-			auto unlockAchievement = [](int id, const char* description) 
-			{
-				bool unlockFlag = false;
-				AddOption(std::to_string(id) + ". " + description, unlockFlag);
-				if (unlockFlag && !HAS_ACHIEVEMENT_BEEN_PASSED(id))
-				{
-					GIVE_ACHIEVEMENT_TO_PLAYER(id);
-				}
-			};
-			
-			unlockAchievement(1, "Unlock 'Welcome to Los Santos'");
-			unlockAchievement(2, "Unlock 'A Friendship Resurrected'");
-			unlockAchievement(3, "Unlock 'A Fair Day's Pay'");
-			unlockAchievement(4, "Unlock 'The Moment of Truth'");
-			unlockAchievement(5, "Unlock 'To Live or Die in Los Santos'");
-			unlockAchievement(6, "Unlock 'Diamond Hard'");
-			unlockAchievement(7, "Unlock 'Subversive'");
-			unlockAchievement(8, "Unlock 'Blitzed'");
-			unlockAchievement(9, "Unlock 'Small Town, Big Job'");
-			unlockAchievement(10, "Unlock 'The Government Gimps'");
-			unlockAchievement(11, "Unlock 'The Big One!'");
-			unlockAchievement(12, "Unlock 'Solid Gold, Baby!'");
-			unlockAchievement(13, "Unlock 'Career Criminal'");
-			unlockAchievement(14, "Unlock 'San Andreas Sightseer'");
-			unlockAchievement(15, "Unlock 'All's Fare in Love and War'");
-			unlockAchievement(16, "Unlock 'TP Industries Arms Race'");
-			unlockAchievement(17, "Unlock 'Multi-Disciplined'");
-			unlockAchievement(18, "Unlock 'From Beyond the Stars'");
-			unlockAchievement(19, "Unlock 'A Mystery, Solved'");
-			unlockAchievement(20, "Unlock 'Waste Management'");
-			unlockAchievement(21, "Unlock 'Red Mist'");
-			unlockAchievement(22, "Unlock 'Show Off'");
-			unlockAchievement(23, "Unlock 'Kifflom!'");
-			unlockAchievement(24, "Unlock 'Three Man Army'");
-			unlockAchievement(25, "Unlock 'Out of Your Depth'");
-			unlockAchievement(26, "Unlock 'Altruist Acolyte'");
-			unlockAchievement(27, "Unlock 'A Lot of Cheddar'");
-			unlockAchievement(28, "Unlock 'Trading Pure Alpha'");
-			unlockAchievement(29, "Unlock 'Pimp My Sidearm'");
-			unlockAchievement(30, "Unlock 'Wanted: Alive Or Alive'");
-			unlockAchievement(31, "Unlock 'Los Santos Customs'");
-			unlockAchievement(32, "Unlock 'Close Shave'");
-			unlockAchievement(33, "Unlock 'Off the Plane'");
-			unlockAchievement(34, "Unlock 'Three-Bit Gangster'");
-			unlockAchievement(35, "Unlock 'Making Moves'");
-			unlockAchievement(36, "Unlock 'Above the Law'");
-			unlockAchievement(37, "Unlock 'Numero Uno'");
-			unlockAchievement(38, "Unlock 'The Midnight Club'");
-			unlockAchievement(39, "Unlock 'Unnatural Selection'");
-			unlockAchievement(40, "Unlock 'Backseat Driver'");
-			unlockAchievement(41, "Unlock 'Run Like The Wind'");
-			unlockAchievement(42, "Unlock 'Clean Sweep'");
-			unlockAchievement(43, "Unlock 'Decorated'");
-			unlockAchievement(44, "Unlock 'Stick Up Kid'");
-			unlockAchievement(45, "Unlock 'Enjoy Your Stay'");
-			unlockAchievement(46, "Unlock 'Crew Cut'");
-			unlockAchievement(47, "Unlock 'Full Refund'");
-			unlockAchievement(48, "Unlock 'Dialling Digits'");
-			unlockAchievement(49, "Unlock 'American Dream'");
-			unlockAchievement(50, "Unlock 'A New Perspective'");
-			unlockAchievement(51, "Unlock 'Be Prepared'");
-			unlockAchievement(52, "Unlock 'In the Name of Science'");
-			unlockAchievement(53, "Unlock 'Dead Presidents'");
-			unlockAchievement(54, "Unlock 'Parole Day'");
-			unlockAchievement(55, "Unlock 'Shot Caller'");
-			unlockAchievement(56, "Unlock 'Four Way'");
-			unlockAchievement(57, "Unlock 'Live a Little'");
-			unlockAchievement(58, "Unlock 'Can't Touch This'");
-			unlockAchievement(59, "Unlock 'Mastermind'");
-			unlockAchievement(60, "Unlock 'Vinewood Visionary'");
-			unlockAchievement(61, "Unlock 'Majestic'");
-			unlockAchievement(62, "Unlock 'Humans of Los Santos'");
-			unlockAchievement(63, "Unlock 'First Time Director'");
-			unlockAchievement(64, "Unlock 'Animal Lover'");
-			unlockAchievement(65, "Unlock 'Ensemble Piece'");
-			unlockAchievement(66, "Unlock 'Cult Movie'");
-			unlockAchievement(67, "Unlock 'Location Scout'");
-			unlockAchievement(68, "Unlock 'Method Actor'");
-			unlockAchievement(69, "Unlock 'Cryptozoologist'");
-			unlockAchievement(70, "Unlock 'Getting Started'");
-			unlockAchievement(71, "Unlock 'The Data Breaches'");
-			unlockAchievement(72, "Unlock 'The Bogdan Problem'");
-			unlockAchievement(73, "Unlock 'The Doomsday Scenario'");
-			unlockAchievement(74, "Unlock 'A World Worth Saving'");
-			unlockAchievement(75, "Unlock 'Orbital Obliteration'");
-			unlockAchievement(76, "Unlock 'Elitist'");
-			unlockAchievement(77, "Unlock 'Masterminds'");
-
-		}
-		void SPStatsInCharMenu()
-		{
-			AddTitle(selectedCharName->second);
-
-			for (auto& statList : vCharStatLists)
-			{
-				if (statList.list.size() == 1)
-				{
-					AddOptionStats(statList.list.front());
-				}
-				else
-				{
-					bool bStatListPressed = false;
-					AddOption(statList.title, bStatListPressed, nullFunc, SUB::SPSTATMANAGER_INCHAR_INLIST); if (bStatListPressed)
-					{
-						selectedStatList = &statList;
-					}
-				}
-			}
-		}
-		void InCharInListMenu()
-		{
-			AddTitle(selectedStatList->title);
-
-			for (auto& stat : selectedStatList->list)
-			{
-				AddOptionStats(stat);
-			}
-		}
 	}
 }
-
-
-#include "..\Menu\submenu_switch.h"
-#include "..\Menu\submenu_enum.h"
-REGISTER_SUBMENU(SPSTATMANAGER,               	sub::SpStatManager::SPStatsManagerMenu)
-REGISTER_SUBMENU(SPSTATMANAGER_INCHAR,        	sub::SpStatManager::SPStatsInCharMenu)
-REGISTER_SUBMENU(SPSTATMANAGER_INCHAR_INLIST, 	sub::SpStatManager::InCharInListMenu)

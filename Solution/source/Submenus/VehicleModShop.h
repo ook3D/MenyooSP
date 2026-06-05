@@ -1,132 +1,223 @@
-/*
-* Menyoo PC - Grand Theft Auto V single-player trainer mod
-* Copyright (C) 2019  MAFINS
-*
-* This program is free software: you can redistribute it and/or modify
-* it under the terms of the GNU General Public License as published by
-* the Free Software Foundation, either version 3 of the License, or
-* (at your option) any later version.
-*/
 #pragma once
 
-#include "..\macros.h"
+#include "../Menu/Submenu.h"
 
-#include "..\Menu\Menu.h"
-#include "..\Menu\Routine.h"
+namespace Menu {
 
-#include "..\Natives\natives2.h"
-#include "..\Util\GTAmath.h"
-#include "..\Util\StringManip.h"
-#include "..\Util\FileLogger.h"
-#include "..\Scripting\enums.h"
-#include "..\main.h"
-#include "..\Scripting\GTAvehicle.h"
-#include "..\Scripting\Model.h"
-#include "..\Scripting\Game.h"
-#include "..\Memory\GTAmemory.h"
-#include "..\Scripting\World.h"
-
-#include "Settings.h"
-
-#include <string>
-#include <sstream>
-#include <iomanip>
-#include <vector>
-#include <array>
-
-typedef unsigned char UINT8;
-typedef signed char INT8;
-typedef signed short INT16;
-typedef unsigned long DWORD, Hash;
-typedef int INT, Vehicle, Ped, Object, Entity, ScrHandle;
-
-namespace sub
+class ModShopSubmenu final : public ::Menu::Submenu
 {
-	void PopulateAllPaintIDs();
+public:
+	const char* Id() const override    { return "vehicle_modshop"; }
+	const char* Title() const override { return "Menyoo Customs"; }
+	void Draw() override;
+};
 
-	// vehicle - upgrades
-	void SetVehicleMaxUpgrades(Vehicle vehicle, bool upgradeIt = true, bool invincible = false, INT8 plateType = 5, std::string plateText = std::string(),
-		bool neonIt = false, UINT8 NeonR = 0, UINT8 NeonG = 0, UINT8 NeonB = 0, INT16 prim_col_index = -3, INT16 sec_col_index = -3);
+class ModShopBennysSubmenu final : public ::Menu::Submenu
+{
+public:
+	const char* Id() const override    { return "vehicle_modshop_bennys"; }
+	const char* Title() const override { return "Benny's Lowrider Mods"; }
+	void Draw() override;
+};
 
+class ModShopEmblemSubmenu final : public ::Menu::Submenu
+{
+public:
+	const char* Id() const override    { return "vehicle_modshop_emblem"; }
+	const char* Title() const override { return "Emblem"; }
+	void Draw() override;
+};
 
-	// ModShop
+class ModShopWheelsSubmenu final : public ::Menu::Submenu
+{
+public:
+	const char* Id() const override    { return "vehicle_modshop_wheels"; }
+	const char* Title() const override { return "Wheels"; }
+	void Draw() override;
+};
 
-	void ModShop_();
+class ModShopWheels2Submenu final : public ::Menu::Submenu
+{
+public:
+	const char* Id() const override    { return "vehicle_modshop_wheels_2"; }
+	const char* Title() const override { return "Wheel Position"; }
+	void Draw() override;
+};
 
-	// Bennys
+class ModShopWheels3Submenu final : public ::Menu::Submenu
+{
+public:
+	const char* Id() const override    { return "vehicle_modshop_wheels_3"; }
+	const char* Title() const override { return "Wheels"; }
+	void Draw() override;
+};
 
-	namespace Bennys_catind
-	{
+class ModShopTyresBurstSubmenu final : public ::Menu::Submenu
+{
+public:
+	const char* Id() const override    { return "vehicle_modshop_tyres_burst"; }
+	const char* Title() const override { return "Remove Tyres"; }
+	void Draw() override;
+};
 
-		void Sub_BennysMain();
-	}
+class ModShopPaintsSubmenu final : public ::Menu::Submenu
+{
+public:
+	const char* Id() const override    { return "vehicle_modshop_paints"; }
+	const char* Title() const override { return "Paints"; }
+	void Draw() override;
+};
 
-	// Selected vehicle mod submenu (for selection of mod value)
+class ModShopPaints2Submenu final : public ::Menu::Submenu
+{
+public:
+	const char* Id() const override    { return "vehicle_modshop_paints_2"; }
+	const char* Title() const override { return "Paint Category"; }
+	void Draw() override;
+};
 
-	void MSCatall_();
+class ModShopPaintsSharedSubmenu final : public ::Menu::Submenu
+{
+public:
+	const char* Id() const override    { return "vehicle_modshop_paints_shared"; }
+	const char* Title() const override { return "Paints"; }
+	void Draw() override;
+};
 
-	// Emblem
+class ModShopPaintsChromeSubmenu final : public ::Menu::Submenu
+{
+public:
+	const char* Id() const override    { return "vehicle_modshop_paints_chrome"; }
+	const char* Title() const override { return "Chrome"; }
+	void Draw() override;
+};
 
-	void MSEmblem_();
+class ModShopPaintsMatteSubmenu final : public ::Menu::Submenu
+{
+public:
+	const char* Id() const override    { return "vehicle_modshop_paints_matte"; }
+	const char* Title() const override { return "Matte"; }
+	void Draw() override;
+};
 
-	// Wheels
+class ModShopPaintsNormalSubmenu final : public ::Menu::Submenu
+{
+public:
+	const char* Id() const override    { return "vehicle_modshop_paints_normal"; }
+	const char* Title() const override { return "Classic"; }
+	void Draw() override;
+};
 
-	void MSWheels_();
-	void MSWheels2_();
-	void MSWheels3_();
-	void MSTyresBurst_();
+class ModShopPaintsMetallicSubmenu final : public ::Menu::Submenu
+{
+public:
+	const char* Id() const override    { return "vehicle_modshop_paints_metallic"; }
+	const char* Title() const override { return "Metallic"; }
+	void Draw() override;
+};
 
-	// Windows
+class ModShopPaintsMetalSubmenu final : public ::Menu::Submenu
+{
+public:
+	const char* Id() const override    { return "vehicle_modshop_paints_metal"; }
+	const char* Title() const override { return "Metal"; }
+	void Draw() override;
+};
 
-	namespace MSWindows_catind
-	{
-		void MSWindows_();
-	}
+class ModShopPaintsChameleonSubmenu final : public ::Menu::Submenu
+{
+public:
+	const char* Id() const override    { return "vehicle_modshop_paints_chameleon"; }
+	const char* Title() const override { return "Chameleon"; }
+	void Draw() override;
+};
 
-	// Doors
+class ModShopPaintsPearlSubmenu final : public ::Menu::Submenu
+{
+public:
+	const char* Id() const override    { return "vehicle_modshop_paints_pearl"; }
+	const char* Title() const override { return "Pearlescent"; }
+	void Draw() override;
+};
 
-	void MSDoors_();
+class ModShopPaintsUtilSubmenu final : public ::Menu::Submenu
+{
+public:
+	const char* Id() const override    { return "vehicle_modshop_paints_util"; }
+	const char* Title() const override { return "Utility"; }
+	void Draw() override;
+};
 
-	// Paints
+class ModShopPaintsWornSubmenu final : public ::Menu::Submenu
+{
+public:
+	const char* Id() const override    { return "vehicle_modshop_paints_worn"; }
+	const char* Title() const override { return "Worn"; }
+	void Draw() override;
+};
 
-	INT getpaintCarUsing_index(Vehicle veh, INT partIndex_CustomK);
-	void paintCarUsing_index(Vehicle veh, INT partIndex_CustomK, INT16 colour_index, INT16 pearl_index);
+class ModShopPaintsRgbSubmenu final : public ::Menu::Submenu
+{
+public:
+	const char* Id() const override    { return "vehicle_modshop_paints_rgb"; }
+	const char* Title() const override { return "Set Colour"; }
+	void Draw() override;
+};
 
-	void MSPaints_();
-	void MSPaints2_();
+class ModShopCatAllSubmenu final : public ::Menu::Submenu
+{
+public:
+	const char* Id() const override    { return "vehicle_modshop_cat_all"; }
+	const char* Title() const override { return "Mods"; }
+	void Draw() override;
+};
 
-	namespace MSPaints_catind
-	{
-		void Sub_Shared();
-		void Sub_Chrome();
-		void Sub_Normal();
-		void Sub_Matte();
-		void Sub_Metallic();
-		void Sub_Metal();
-		void Sub_Chameleon();
-		void Sub_Pearl();
-		void Sub_Util();
-		void Sub_Worn();
-	}
+class ModShopWindowsSubmenu final : public ::Menu::Submenu
+{
+public:
+	const char* Id() const override    { return "vehicle_modshop_windows"; }
+	const char* Title() const override { return "Windows"; }
+	void Draw() override;
+};
 
-	void rgb_mode_set_carcol(Vehicle veh, INT16 R, INT16 G, INT16 B, INT16 A);
-	void MSPaints_RGB();
+class ModShopEngineSoundSubmenu final : public ::Menu::Submenu
+{
+public:
+	const char* Id() const override    { return "vehicle_modshop_engine_sound"; }
+	const char* Title() const override { return "Engine Sound"; }
+	void Draw() override;
+};
 
-	// Extras
+class ModShopLightsSubmenu final : public ::Menu::Submenu
+{
+public:
+	const char* Id() const override    { return "vehicle_modshop_lights"; }
+	const char* Title() const override { return "Lights"; }
+	void Draw() override;
+};
 
-	void MSExtra_();
+class ModShopDoorsSubmenu final : public ::Menu::Submenu
+{
+public:
+	const char* Id() const override    { return "vehicle_modshop_doors"; }
+	const char* Title() const override { return "Doors"; }
+	void Draw() override;
+};
 
-	// Neons
+class ModShopNeonsSubmenu final : public ::Menu::Submenu
+{
+public:
+	const char* Id() const override    { return "vehicle_modshop_neons"; }
+	const char* Title() const override { return "Neons Lights"; }
+	void Draw() override;
+};
 
-	void MSNeons_();
-
-	// Engine sound
-
-	void MSEngineSound_();
-
-	void MSLights_();
+class ModShopExtraSubmenu final : public ::Menu::Submenu
+{
+public:
+	const char* Id() const override    { return "vehicle_modshop_extra"; }
+	const char* Title() const override { return "Extras"; }
+	void Draw() override;
+};
 
 }
-
-
-

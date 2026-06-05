@@ -20,6 +20,7 @@
 #include "..\Scripting\Game.h"
 
 #include "..\Menu\Routine.h"
+#include "..\Submenus\VehicleRuntime.h"
 
 namespace SmashAbility
 {

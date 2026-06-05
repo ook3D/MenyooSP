@@ -26,6 +26,8 @@
 #include "..\Scripting\WeaponIndivs.h"
 
 #include "..\Menu\Routine.h"
+#include "..\Submenus\WeaponRuntime.h"
+#include "..\Submenus\VehicleRuntime.h"
 
 namespace RopeGun
 {

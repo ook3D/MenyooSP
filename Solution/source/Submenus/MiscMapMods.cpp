@@ -1,13 +1,46 @@
-/*
-* Menyoo PC - Grand Theft Auto V single-player trainer mod
-* Copyright (C) 2019  MAFINS
-*
-* This program is free software: you can redistribute it and/or modify
-* it under the terms of the GNU General Public License as published by
-* the Free Software Foundation, either version 3 of the License, or
-* (at your option) any later version.
-*/
 #include "MiscMapMods.h"
+
+#include "../Menu/SubmenuRegistry.h"
+
+namespace Menu {
+
+void MapModsSubmenu::Draw()
+{
+	sub::MapMods::LoadMapModsFromXmlIfEmpty();
+
+	DrawTitle();
+
+	const int count = sub::MapMods::GetMapModCount();
+	for (int i = 0; i < count; ++i)
+	{
+		if (DrawOption(sub::MapMods::GetMapModName(i)))
+		{
+			sub::MapMods::SetCurrentMapModIndex(i);
+			NavigateTo("misc_map_mods_2");
+		}
+	}
+}
+
+void MapMods2Submenu::Draw()
+{
+	DrawTitle();
+
+	if (DrawOption("Teleport"))
+		sub::MapMods::CurrentMapModTeleport();
+
+	const bool wasLoaded = sub::MapMods::IsCurrentMapModLoaded();
+	if (DrawToggleExternal("Load", wasLoaded))
+	{
+		if (wasLoaded)
+			sub::MapMods::CurrentMapModUnload();
+		else
+			sub::MapMods::CurrentMapModLoad();
+	}
+}
+
+}
+REGISTER_SUBMENU(::Menu::MapModsSubmenu)
+REGISTER_SUBMENU(::Menu::MapMods2Submenu)
 
 namespace sub
 {
@@ -201,62 +234,44 @@ namespace sub
 			}
 		}
 
-		void AppPointOption(GTAMapMod &mapMod)
-		{
-			bool pressed = false;
-			AddOption(mapMod.Name(), pressed, nullFunc, SUB::MAPMODS2, false); if (pressed)
-			{
-				currentMAPMODC = &mapMod;
-			}
-		}
-
-		void MapMods()
+		void LoadMapModsFromXmlIfEmpty()
 		{
 			if (allMapMods.empty())
-			{
 				LoadMapModsFromXml();
-			}
-
-			AddTitle("Map Mods");
-
-			for (auto& mm : allMapMods)
-			{
-				AppPointOption(mm);
-			}
-
 		}
-
-		void MapMods2()
+		int GetMapModCount()
 		{
-
-			bool currentMapModTeleport = false;
-			bool currentMapModLoad = false;
-			bool currentMapModUnload = false;
-
-			AddTitle(currentMAPMODC->Name());
-			AddOption("Teleport", currentMapModTeleport);
-			AddLocal("Load", currentMAPMODC->IsLoaded(), currentMapModLoad, currentMapModUnload);
-
-			if (currentMapModTeleport) 
-			{
-				currentMAPMODC->Teleport();
-			}
-
-			if (currentMapModLoad)
-			{
-				currentMAPMODC->Load();
-			}
-
-			if (currentMapModUnload) 
-			{
-				currentMAPMODC->Unload();
-			}
+			return static_cast<int>(allMapMods.size());
 		}
+		const std::string& GetMapModName(int index)
+		{
+			return allMapMods[index].Name();
+		}
+		void SetCurrentMapModIndex(int index)
+		{
+			currentMAPMODC = &allMapMods[index];
+		}
+		static const std::string kEmpty;
+		const std::string& GetCurrentMapModName()
+		{
+			return currentMAPMODC ? currentMAPMODC->Name() : kEmpty;
+		}
+		bool IsCurrentMapModLoaded()
+		{
+			return currentMAPMODC && currentMAPMODC->IsLoaded();
+		}
+		void CurrentMapModTeleport()
+		{
+			if (currentMAPMODC) currentMAPMODC->Teleport();
+		}
+		void CurrentMapModLoad()
+		{
+			if (currentMAPMODC) currentMAPMODC->Load();
+		}
+		void CurrentMapModUnload()
+		{
+			if (currentMAPMODC) currentMAPMODC->Unload();
+		}
+
 	}
 }
-
-
-#include "..\Menu\submenu_switch.h"
-#include "..\Menu\submenu_enum.h"
-REGISTER_SUBMENU(MAPMODS,            sub::MapMods::MapMods)
-REGISTER_SUBMENU(MAPMODS2,           sub::MapMods::MapMods2)

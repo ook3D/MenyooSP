@@ -11,6 +11,7 @@
 
 #include "Menu.h"
 #include "Routine.h"
+#include "..\Submenus\VehicleSpawnerRuntime.h"
 
 #include "..\Natives\natives2.h"
 #include "..\Util\ExePath.h"

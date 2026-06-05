@@ -13,6 +13,8 @@
 
 //#include "..\..\Menu\Menu.h"
 #include "..\..\Menu\Routine.h"
+#include "..\..\Menu\Ticks.h" // UpdateNearbyStuffArraysTick
+#include "..\VehicleRuntime.h"
 
 #include "..\..\Natives\natives2.h"
 #include "..\..\Natives\types.h" //RGBA/RgbS
@@ -29,9 +31,9 @@
 #include "..\..\Scripting\enums.h"
 #include "..\..\Scripting\Camera.h"
 
-#include "..\PedAnimation.h"
-#include "..\PedComponentChanger.h"
-#include "..\PtfxSubs.h"
+#include "..\PedAnimationRuntime.h"
+#include "..\PedComponentRuntime.h"
+#include "..\PtfxData.h"
 #include "Databases.h"
 #include "SpoonerEntity.h"
 #include "SpoonerSettings.h"

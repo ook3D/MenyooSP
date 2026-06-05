@@ -1,135 +1,116 @@
-/*
-* Menyoo PC - Grand Theft Auto V single-player trainer mod
-* Copyright (C) 2019  MAFINS
-*
-* This program is free software: you can redistribute it and/or modify
-* it under the terms of the GNU General Public License as published by
-* the Free Software Foundation, either version 3 of the License, or
-* (at your option) any later version.
-*/
-#include "MainMenu.h"
 #include "Players.h"
 
-namespace sub
-{
-	void PlayersMenu()
-	{
-		AddTitle("Players");
+#include "../macros.h"                         // GAME_PLAYERCOUNT
+#include "../Menu/SubmenuRegistry.h"
+#include "../Menu/Routine.h"
+#include "PlayerRuntime.h"
 
-		for (int i = 0; i < GAME_PLAYERCOUNT; i++)
+#include "../Natives/natives2.h"
+#include "../Scripting/Game.h"
+#include "../Scripting/GTAplayer.h"
+#include "../Scripting/GTAped.h"
+
+#include <string>
+
+namespace Menu {
+
+
+void PlayersSubmenu::Draw()
+{
+	DrawTitle();
+
+	for (int i = 0; i < GAME_PLAYERCOUNT; ++i)
+	{
+		if (!NETWORK_IS_PLAYER_ACTIVE(i)) continue;
+
+		if (DrawOption(GET_PLAYER_NAME(i)))
 		{
-			if (NETWORK_IS_PLAYER_ACTIVE(i))
-			{
-				bool bPlayerPressed = false;
-				AddOption(GET_PLAYER_NAME(i), bPlayerPressed);
-				if (bPlayerPressed)
-				{
-					g_Ped2 = i;
-					g_Ped1 = GET_PLAYER_PED(g_Ped2); // Store ped
-					g_PlayerName = GET_PLAYER_NAME(g_Ped2); // Store name
-					Menu::NewSetMenu(SUB::PLAYERSSUBAMENU);
-				}
-			}
+			g_Ped2 = i;
+			g_Ped1 = GET_PLAYER_PED(g_Ped2);
+			g_PlayerName = GET_PLAYER_NAME(g_Ped2);
+			NavigateTo("players_sub");
 		}
 	}
+}
 
-	void PlayersAMenu()
+void PlayersSubSubmenu::Draw()
+{
+	DrawTitle();
+
+	std::string spectatePlayerStr = "CM_SPECTATE";
+	if (Game::DoesGXTEntryExist(spectatePlayerStr))
 	{
-		bool spectateOn = false;
-		bool spectateOff = false;
-		bool setWaypoint = false;
+		spectatePlayerStr = Game::GetGXTEntry(spectatePlayerStr);
+		spectatePlayerStr = spectatePlayerStr.substr(0, spectatePlayerStr.find('('));
+	}
+	else
+	{
+		spectatePlayerStr = "Spectate Player";
+	}
 
-		std::string spectatePlayerStr = "CM_SPECTATE";
-		if (Game::DoesGXTEntryExist(spectatePlayerStr))
-		{
-			spectatePlayerStr = Game::GetGXTEntry(spectatePlayerStr);
-			spectatePlayerStr = spectatePlayerStr.substr(0, spectatePlayerStr.find('('));
-		}
-		else 
-		{
-			spectatePlayerStr = "Spectate Player";
-		}
+	const bool setWaypoint = DrawOption("Set Waypoint To Player");
+	const bool isSpectatingThis = (spectatePlayer == g_Ped2);
+	const bool spectateTapped = DrawToggleExternal(spectatePlayerStr, isSpectatingThis);
 
-		AddTitle(g_PlayerName); // Title = player name
-		AddOption("Set Waypoint To Player", setWaypoint);
-		AddLocal(spectatePlayerStr, spectatePlayer == g_Ped2, spectateOn, spectateOff); // Spectate Player
-
-		if (spectateOn)
+	if (spectateTapped && !isSpectatingThis)
+	{
+		// Turn ON spectating this player.
+		Ped ped = 0;
+		spectatePlayer = g_Ped2;
+		for (int i = 0; i < GAME_PLAYERCOUNT; ++i)
 		{
-			Ped ped;
-			spectatePlayer = g_Ped2;
-			for (int i = 0; i < GAME_PLAYERCOUNT; i++)
-			{
-				if (!NETWORK_IS_PLAYER_ACTIVE(i)) 
-				{
-					continue;
-				}
-				ped = GET_PLAYER_PED(i);
-				if (!DOES_ENTITY_EXIST(ped)) 
-				{
-					continue;
-				}
-				NETWORK_SET_IN_SPECTATOR_MODE_EXTENDED(0, ped, 1);
-				NETWORK_SET_IN_SPECTATOR_MODE(false, ped);
-			}
-			ped = GET_PLAYER_PED(spectatePlayer);
-			if (DOES_ENTITY_EXIST(ped))
-			{
-				STAT_SET_BOOL(GET_HASH_KEY("MPPLY_CAN_SPECTATE"), true, true);
-				NETWORK_SET_IN_SPECTATOR_MODE(true, ped);
-			}
+			if (!NETWORK_IS_PLAYER_ACTIVE(i)) continue;
+			ped = GET_PLAYER_PED(i);
+			if (!DOES_ENTITY_EXIST(ped)) continue;
+			NETWORK_SET_IN_SPECTATOR_MODE_EXTENDED(0, ped, 1);
+			NETWORK_SET_IN_SPECTATOR_MODE(false, ped);
 		}
-		if (spectateOff)
+		ped = GET_PLAYER_PED(spectatePlayer);
+		if (DOES_ENTITY_EXIST(ped))
 		{
-			Ped ped;
-			for (int i = 0; i < GAME_PLAYERCOUNT; i++)
-			{
-				if (!NETWORK_IS_PLAYER_ACTIVE(i)) 
-				{
-					continue;
-				}
-				ped = GET_PLAYER_PED(i);
-				if (!DOES_ENTITY_EXIST(ped)) 
-				{
-					continue;
-				}
-				NETWORK_SET_IN_SPECTATOR_MODE_EXTENDED(0, ped, 1);
-				NETWORK_SET_IN_SPECTATOR_MODE(false, ped);
-			}
-			NETWORK_SET_ACTIVITY_SPECTATOR(false);
-			spectatePlayer = -1;
+			STAT_SET_BOOL(GET_HASH_KEY("MPPLY_CAN_SPECTATE"), true, true);
+			NETWORK_SET_IN_SPECTATOR_MODE(true, ped);
 		}
-
-		if (setWaypoint)
+	}
+	else if (spectateTapped && isSpectatingThis)
+	{
+		// Turn OFF spectating.
+		Ped ped = 0;
+		for (int i = 0; i < GAME_PLAYERCOUNT; ++i)
 		{
-			GTAplayer player = g_Ped2;
-			if (player.IsActive())
+			if (!NETWORK_IS_PLAYER_ACTIVE(i)) continue;
+			ped = GET_PLAYER_PED(i);
+			if (!DOES_ENTITY_EXIST(ped)) continue;
+			NETWORK_SET_IN_SPECTATOR_MODE_EXTENDED(0, ped, 1);
+			NETWORK_SET_IN_SPECTATOR_MODE(false, ped);
+		}
+		NETWORK_SET_ACTIVITY_SPECTATOR(false);
+		spectatePlayer = -1;
+	}
+
+	if (setWaypoint)
+	{
+		GTAplayer player = g_Ped2;
+		if (player.IsActive())
+		{
+			const GTAped& playerPed = player.GetPed();
+			if (playerPed.IsAlive())
 			{
-				const GTAped& playerPed = player.GetPed();
-				if (playerPed.IsAlive())
-				{
-					const Vector3& pos = playerPed.GetPosition();
-					SET_NEW_WAYPOINT(pos.x, pos.y);
-				}
-				else
-				{
-					SET_WAYPOINT_OFF();
-				}
+				const Vector3& pos = playerPed.GetPosition();
+				SET_NEW_WAYPOINT(pos.x, pos.y);
 			}
 			else
 			{
 				SET_WAYPOINT_OFF();
 			}
 		}
+		else
+		{
+			SET_WAYPOINT_OFF();
+		}
 	}
 }
 
-
-#include "..\Menu\submenu_switch.h"
-#include "..\Menu\submenu_enum.h"
-REGISTER_SUBMENU(PLAYERSSUB,  		sub::PlayersMenu)
-REGISTER_SUBMENU(PLAYERSSUBAMENU, 	sub::PlayersAMenu)
-
-
-
-
+}
+REGISTER_SUBMENU(::Menu::PlayersSubmenu)
+REGISTER_SUBMENU(::Menu::PlayersSubSubmenu)

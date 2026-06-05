@@ -1,27 +1,15 @@
-/*
-* Menyoo PC - Grand Theft Auto V single-player trainer mod
-* Copyright (C) 2019  MAFINS
-*
-* This program is free software: you can redistribute it and/or modify
-* it under the terms of the GNU General Public License as published by
-* the Free Software Foundation, either version 3 of the License, or
-* (at your option) any later version.
-*/
 #pragma once
 
-#include "..\macros.h"
+#include "../Menu/Submenu.h"
 
-#include "..\Menu\Menu.h"
-#include "..\Menu\Routine.h"
+namespace Menu {
 
-#include "..\Natives\natives2.h"
-#include "../Util/FileLogger.h"
-
-namespace sub
+class MainMenuSubmenu final : public ::Menu::Submenu
 {
-	void MainMenu();
+public:
+	const char* Id() const override    { return "main_menu"; }
+	const char* Title() const override { return "MENYOO"; }
+	void Draw() override;
+};
+
 }
-
-
-
-

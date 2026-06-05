@@ -12,6 +12,8 @@
 #include "..\macros.h"
 
 #include "..\Menu\Routine.h"
+#include "..\Submenus\VehicleRuntime.h"
+#include "..\Submenus\Neons.h"
 #include "..\Menu\Menu.h"
 
 #include "..\Util\GTAmath.h"

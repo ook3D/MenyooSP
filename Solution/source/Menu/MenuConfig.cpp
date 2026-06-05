@@ -1,4 +1,4 @@
-﻿/*
+/*
 * Menyoo PC - Grand Theft Auto V single-player trainer mod
 * Copyright (C) 2019  MAFINS
 *
@@ -13,7 +13,9 @@
 
 #include "Menu.h"
 #include "Routine.h"
+#include "Ticks.h" // showFullHUD
 #include "Language.h"
+#include "..\Submenus\Neons.h"
 
 #include "..\Util\ExePath.h"
 #include "..\Natives\types.h" // RGBA/RgbS
@@ -24,18 +26,22 @@
 #include "..\Submenus\Spooner\SpoonerSettings.h"
 #include "..\Misc\ManualRespawn.h"
 #include "..\Misc\FpsCounter.h"
-#include "..\Submenus\MiscOptions.h"
+#include "..\Submenus\Misc.h"
 #include "..\Misc\JumpAroundMode.h"
 #include "..\Memory\GTAmemory.h"
 #include "..\Submenus\AnimalRiding.h"
-#include "..\Submenus\WeaponOptions.h"
+#include "..\Submenus\PlayerRuntime.h"
+#include "..\Submenus\WeaponRuntime.h"
+#include "..\Submenus\VehicleRuntime.h"
+#include "..\Submenus\VehicleSpawnerRuntime.h"
+#include "..\Submenus\VehicleModShopRuntime.h"
 #include "..\Misc\MagnetGun.h"
 #include "..\Misc\RopeGun.h"
 #include "..\Misc\SmashAbility.h"
 #include "..\Misc\VehicleTow.h"
 #include "..\Misc\VehicleFly.h"
-#include "..\Submenus\TimeOptions.h"
-#include "..\Submenus\VehicleOptions.h"
+#include "..\Submenus\Time.h"
+#include "..\Submenus\Vehicle.h"
 
 #include <Windows.h>
 #include <simpleini\SimpleIni.h>

@@ -13,6 +13,7 @@
 
 //#include "..\..\Menu\Menu.h"
 #include "..\..\Menu\Routine.h"
+#include "..\PlayerRuntime.h"
 
 #include "..\..\Natives\natives2.h"
 #include "..\..\Scripting\PTFX.h"

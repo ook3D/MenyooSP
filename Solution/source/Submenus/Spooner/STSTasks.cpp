@@ -14,7 +14,6 @@
 #include "STSTask.h"
 
 #include "..\..\Natives\natives2.h"
-#include "..\..\Menu\submenu_enum.h"
 #include "..\..\Scripting\GTAentity.h"
 #include "..\..\Scripting\GTAped.h"
 #include "..\..\Scripting\GTAblip.h"
@@ -29,7 +28,7 @@
 
 #include "SpoonerEntity.h"
 #include "EntityManagement.h"
-#include "Submenus_TaskSequence.h"
+#include "SpoonerTaskSequenceStubs.h"
 
 #include <pugixml\src\pugixml.hpp>
 #include <vector>

@@ -36,6 +36,7 @@
 #include <array>
 #include <string>
 #include <sstream>
+#include <unordered_map>
 #include <utility>
 
 #include "../Util/StringManip.h"
@@ -1360,7 +1361,7 @@ void GTAmemory::Init()
 	{
 		address = MemryScan::PatternScanner::FindPattern("\x40\x53\x48\x83\xEC\x20\x83\x61\x0C\x00\x44\x89\x41\x08\x49\x63\xC0", "xxxxxxxxxxxxxxxxx");
 	}
-	if (address != null)
+	if (address != 0)
 	{
 		CreateNmMessageFunc = reinterpret_cast<UINT64(*)(uint64_t, uint64_t, int)>(address);
 	}
@@ -1369,7 +1370,7 @@ void GTAmemory::Init()
 	if (g_isEnhanced)
 	{
 		address = MemryScan::PatternScanner::FindPattern("44 8b 89 ? ? ? ? b9");
-		if (address != null)
+		if (address != 0)
 		{
 			GiveNmMessageFunc = reinterpret_cast<void(*)(uint64_t, void*, uint64_t)>(address);
 		}
@@ -1377,7 +1378,7 @@ void GTAmemory::Init()
 	else
 	{
 		address = MemryScan::PatternScanner::FindPattern("\x0F\x84\x8B\x00\x00\x00\x48\x8B\x47\x30\x48\x8B\x48\x10\x48\x8B\x51\x20\x80\x7A\x10\x0A", "xxxxxxxxxxxxxxxxxxxxxx");
-		if (address != null)
+		if (address != 0)
 		{
 			GiveNmMessageFunc = reinterpret_cast<void(*)(uint64_t, void*, uint64_t)>((UINT64*)(*(int*)(address - 0x1E) + address - 0x1A));
 		}
@@ -1386,14 +1387,14 @@ void GTAmemory::Init()
 	if (g_isEnhanced)
 	{
 		address = MemryScan::PatternScanner::FindPattern("7d ? 45 89 c6 48 89 d7");
-		if (address != null)
+		if (address != 0)
 		{
 			SetNmIntAddress = reinterpret_cast<unsigned char(*)(__int64, __int64, int)>(address - 20);
 		}
 	}
 	else {
 		address = MemryScan::PatternScanner::FindPattern("\x48\x89\x5C\x24\x00\x57\x48\x83\xEC\x20\x48\x8B\xD9\x48\x63\x49\x0C\x41\x8B\xF8", "xxxx?xxxxxxxxxxxxxxx");
-		if (address != null)
+		if (address != 0)
 		{
 			SetNmIntAddress = reinterpret_cast<unsigned char(*)(__int64, __int64, int)>(address);
 		}
@@ -1402,7 +1403,7 @@ void GTAmemory::Init()
 	if (g_isEnhanced)
 	{
 		address = MemryScan::PatternScanner::FindPattern("7d ? 45 89 c6 48 89 d3");
-		if (address != null)
+		if (address != 0)
 		{
 			SetNmBoolAddress = reinterpret_cast<unsigned char(*)(__int64, __int64, unsigned char)>(address - 20);
 		}
@@ -1410,7 +1411,7 @@ void GTAmemory::Init()
 	else
 	{
 		address = MemryScan::PatternScanner::FindPattern("\x48\x89\x5C\x24\x00\x57\x48\x83\xEC\x20\x48\x8B\xD9\x48\x63\x49\x0C\x41\x8A\xF8", "xxxx?xxxxxxxxxxxxxxx");
-		if (address != null)
+		if (address != 0)
 		{
 			SetNmBoolAddress = reinterpret_cast<unsigned char(*)(__int64, __int64, unsigned char)>(address);
 		}
@@ -1423,7 +1424,7 @@ void GTAmemory::Init()
 	else {
 		address = MemryScan::PatternScanner::FindPattern("\x40\x53\x48\x83\xEC\x30\x48\x8B\xD9\x48\x63\x49\x0C", "xxxxxxxxxxxxx");
 	}
-	if (address != null)
+	if (address != 0)
 	{
 		SetNmFloatAddress = reinterpret_cast<unsigned char(*)(__int64, __int64, float)>(address);
 	}
@@ -1431,14 +1432,14 @@ void GTAmemory::Init()
 	if (g_isEnhanced)
 	{
 		address = MemryScan::PatternScanner::FindPattern("41 56 56 57 53 48 83 ec ? 48 89 ce 48 63 79");
-		if (address != null)
+		if (address != 0)
 		{
 			SetNmStringAddress = reinterpret_cast<unsigned char(*)(__int64, __int64, __int64)>(address);
 		}
 	}
 	else {
 		address = MemryScan::PatternScanner::FindPattern("\x57\x48\x83\xEC\x20\x48\x8B\xD9\x48\x63\x49\x0C\x49\x8B\xE8", "xxxxxxxxxxxxxxx");
-		if (address != null)
+		if (address != 0)
 		{
 			SetNmStringAddress = reinterpret_cast<unsigned char(*)(__int64, __int64, __int64)>(address - 15);
 		}
@@ -1447,7 +1448,7 @@ void GTAmemory::Init()
 	if (g_isEnhanced)
 	{
 		address = MemryScan::PatternScanner::FindPattern("0f 29 7c 24 30 0f 29 74 24 20 48 89 ce 48 63 79");
-		if (address != null)
+		if (address != 0)
 		{
 			SetNmVec3Address = reinterpret_cast<unsigned char(*)(__int64, __int64, float, float, float)>(address - 15);
 		}
@@ -1455,7 +1456,7 @@ void GTAmemory::Init()
 	else
 	{
 		address = MemryScan::PatternScanner::FindPattern("\x40\x53\x48\x83\xEC\x40\x48\x8B\xD9\x48\x63\x49\x0C", "xxxxxxxxxxxxx");
-		if (address != null)
+		if (address != 0)
 		{
 			SetNmVec3Address = reinterpret_cast<unsigned char(*)(__int64, __int64, float, float, float)>(address);
 		}

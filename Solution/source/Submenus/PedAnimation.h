@@ -1,74 +1,159 @@
-/*
-* Menyoo PC - Grand Theft Auto V single-player trainer mod
-* Copyright (C) 2019  MAFINS
-*
-* This program is free software: you can redistribute it and/or modify
-* it under the terms of the GNU General Public License as published by
-* the Free Software Foundation, either version 3 of the License, or
-* (at your option) any later version.
-*/
 #pragma once
 
-#include <vector>
+#include "../Menu/Submenu.h"
+
 #include <string>
-#include <map>
+#include <utility>
 
-class GTAentity;
+namespace Menu {
 
-namespace sub
+class PedAnimationSubmenu final : public ::Menu::Submenu
 {
-	namespace AnimationMenu
-	{
-		struct NamedAnimation { std::string caption; std::string animDict, animName; };
-		extern const std::vector<AnimationMenu::NamedAnimation> presetPedAnims;
-		extern std::map<std::string, std::vector<std::string>> allPedAnims;
-		extern std::pair<const std::string, std::vector<std::string>>* selectedAnimDictPtr;
+public:
+	const char* Id() const override    { return "ped_animation"; }
+	const char* Title() const override { return "Animations"; }
+	void Draw() override;
+};
 
-		void PopulateAllPedAnimsList();
-		void AllPedAnimsMenu();
-		void Sub_AllPedAnims_InDict();
-	}
+class AnimationSettingsSubmenu final : public ::Menu::Submenu
+{
+public:
+	const char* Id() const override    { return "ped_animation_settings"; }
+	const char* Title() const override { return "Settings"; }
+	void Draw() override;
+};
 
-	void GetFavouriteAnimations(std::vector<std::pair<std::string, std::string>>& result);
-	bool IsAnimationAFavourite(const std::string animDict, const std::string& animName);
-	void AddAnimationToFavourites(const std::string animDict, const std::string& animName);
-	void RemoveAnimationFromFavourites(const std::string animDict, const std::string& animName);
-	void AnimationStopAnimationCallback();
-	void PedAnimationMenu();
-	void AnimationSub_Settings();
-	void AnimationFavouritesMenu();
-	void AnimationSub_Custom();
-	void DeerAnimationMenu();
-	void SharkAnimationMenu();
-	void MissionRappelAnimationMenu();
-	void GestureSitAnimationMenu();
-	void SwatAnimationMenu();
-	void GuardReactAnimationMenu();
-	void RandomArrestAnimationMenu();
+class AnimationFavouritesSubmenu final : public ::Menu::Submenu
+{
+public:
+	const char* Id() const override    { return "ped_animation_favourites"; }
+	const char* Title() const override { return "Favourites"; }
+	void Draw() override;
+	void OnExit() override;
 
-	namespace AnimationTaskScenarios
-	{
-		extern std::vector<std::string> vValues_TaskScenarios;
-		struct NamedScenario { std::string name; std::string label; };
-		extern std::vector<NamedScenario> vNamedScenarios;
+private:
+	std::string searchStr;
+};
 
-		void AnimationTaskScenarios1();
-		void AnimationTaskScenarios2();
+class AnimationCustomSubmenu final : public ::Menu::Submenu
+{
+public:
+	const char* Id() const override    { return "ped_animation_custom"; }
+	const char* Title() const override { return "Custom Animation"; }
+	void Draw() override;
+};
 
-	}
+class DeerAnimationSubmenu final : public ::Menu::Submenu
+{
+public:
+	const char* Id() const override    { return "ped_animation_deer"; }
+	const char* Title() const override { return "Animalations"; }
+	void Draw() override;
+};
 
-	std::string GetPedMovementClipSet(const GTAentity& ped);
-	void SetPedMovementClipSet(GTAentity ped, const std::string& setName);
-	std::string GetPedWeaponMovementClipSet(const GTAentity& ped);
-	void SetPedWeaponMovementClipSet(GTAentity ped, const std::string& setName);
-	void MovementGroupMenu();
+class SharkAnimationSubmenu final : public ::Menu::Submenu
+{
+public:
+	const char* Id() const override    { return "ped_animation_shark"; }
+	const char* Title() const override { return "Animalations"; }
+	void Draw() override;
+};
 
-	namespace FacialAnims
-	{
-		struct NamedFacialAnim { std::string caption; std::string animName; };
-		extern const std::vector<NamedFacialAnim> vFacialAnims;
+class MissionRappelAnimationSubmenu final : public ::Menu::Submenu
+{
+public:
+	const char* Id() const override    { return "ped_animation_miss_rappel"; }
+	const char* Title() const override { return "Swat Animations"; }
+	void Draw() override;
+};
 
-		void FacialMoodMenu();
-	}
+class GestureSitAnimationSubmenu final : public ::Menu::Submenu
+{
+public:
+	const char* Id() const override    { return "ped_animation_gesture_sit"; }
+	const char* Title() const override { return "Sitting Animations"; }
+	void Draw() override;
+};
+
+class SwatAnimationSubmenu final : public ::Menu::Submenu
+{
+public:
+	const char* Id() const override    { return "ped_animation_swat"; }
+	const char* Title() const override { return "Swat Animations"; }
+	void Draw() override;
+};
+
+class GuardReactAnimationSubmenu final : public ::Menu::Submenu
+{
+public:
+	const char* Id() const override    { return "ped_animation_guard_react"; }
+	const char* Title() const override { return "Guard Animations"; }
+	void Draw() override;
+};
+
+class RandomArrestAnimationSubmenu final : public ::Menu::Submenu
+{
+public:
+	const char* Id() const override    { return "ped_animation_random_arrest"; }
+	const char* Title() const override { return "Arrest Animations"; }
+	void Draw() override;
+};
+
+class AllPedAnimsSubmenu final : public ::Menu::Submenu
+{
+public:
+	const char* Id() const override    { return "ped_animation_all"; }
+	const char* Title() const override { return "All Animations"; }
+	void Draw() override;
+	void OnEnter() override;
+
+private:
+	std::string searchStr;
+	bool loaded = false;
+};
+
+class AllPedAnimsInDictSubmenu final : public ::Menu::Submenu
+{
+public:
+	const char* Id() const override    { return "ped_animation_all_in_dict"; }
+	const char* Title() const override { return "Dictionary"; }
+	void Draw() override;
+};
+
+class AnimationTaskScenarios1Submenu final : public ::Menu::Submenu
+{
+public:
+	const char* Id() const override    { return "ped_animation_task_scenarios"; }
+	const char* Title() const override { return "Scenarios"; }
+	void Draw() override;
+};
+
+class AnimationTaskScenarios2Submenu final : public ::Menu::Submenu
+{
+public:
+	const char* Id() const override    { return "ped_animation_task_scenarios2"; }
+	const char* Title() const override { return "All Scenarios"; }
+	void Draw() override;
+	void OnExit() override;
+
+private:
+	std::string searchStr;
+};
+
+class MovementGroupSubmenu final : public ::Menu::Submenu
+{
+public:
+	const char* Id() const override    { return "ped_animation_movement_group"; }
+	const char* Title() const override { return "Movement Styles"; }
+	void Draw() override;
+};
+
+class FacialMoodSubmenu final : public ::Menu::Submenu
+{
+public:
+	const char* Id() const override    { return "ped_animation_facial_mood"; }
+	const char* Title() const override { return "Mood"; }
+	void Draw() override;
+};
 
 }

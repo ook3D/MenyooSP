@@ -1,31 +1,21 @@
-/*
-* Menyoo PC - Grand Theft Auto V single-player trainer mod
-* Copyright (C) 2019  MAFINS
-*
-* This program is free software: you can redistribute it and/or modify
-* it under the terms of the GNU General Public License as published by
-* the Free Software Foundation, either version 3 of the License, or
-* (at your option) any later version.
-*/
 #pragma once
 
-#include "..\macros.h"
+#include "../Menu/Submenu.h"
 
-#include "..\Menu\Menu.h"
+#include "../macros.h"
+#include "../Menu/Menu.h"
+#include "../Natives/natives2.h"
+#include "../Util/GTAmath.h"
+#include "../Util/ExePath.h"
+#include "../Scripting/GTAentity.h"
+#include "../Scripting/GTAprop.h"
+#include "../Scripting/GTAped.h"
+#include "../Scripting/Game.h"
+#include "../Scripting/Model.h"
+#include "../Scripting/World.h"
+#include "Teleport/TeleMethods.h"
 
-#include "..\Natives\natives2.h"
-#include "..\Util\GTAmath.h"
-#include "..\Util\ExePath.h"
-#include "..\Scripting\GTAentity.h"
-#include "..\Scripting\GTAprop.h"
-#include "..\Scripting\GTAped.h"
-#include "..\Scripting\Game.h"
-#include "..\Scripting\Model.h"
-#include "..\Scripting\World.h"
-
-#include "..\Submenus\Teleport\TeleMethods.h"
-
-#include <pugixml\src\pugixml.hpp>
+#include <pugixml/src/pugixml.hpp>
 #include <string>
 #include <vector>
 
@@ -36,8 +26,34 @@ namespace sub
 {
 	namespace MapMods
 	{
-		void UnloadAllMapMods();
-		void MapMods();
-		void MapMods2();
+		void LoadMapModsFromXmlIfEmpty();
+		int  GetMapModCount();
+		const std::string& GetMapModName(int index);
+		void SetCurrentMapModIndex(int index);
+		const std::string& GetCurrentMapModName();
+		bool IsCurrentMapModLoaded();
+		void CurrentMapModTeleport();
+		void CurrentMapModLoad();
+		void CurrentMapModUnload();
 	}
+}
+
+namespace Menu {
+
+class MapModsSubmenu final : public ::Menu::Submenu
+{
+public:
+	const char* Id() const override    { return "misc_map_mods"; }
+	const char* Title() const override { return "Map Mods"; }
+	void Draw() override;
+};
+
+class MapMods2Submenu final : public ::Menu::Submenu
+{
+public:
+	const char* Id() const override    { return "misc_map_mods_2"; }
+	const char* Title() const override { return "Map Mod"; }
+	void Draw() override;
+};
+
 }

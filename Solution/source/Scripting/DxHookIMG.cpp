@@ -19,8 +19,8 @@
 
 #include "..\Util\ExePath.h"
 
-#include "..\Submenus\VehicleOptions.h"
-#include "..\Submenus\TimeOptions.h"
+#include "..\Submenus\Vehicle.h"
+#include "..\Submenus\Time.h"
 
 namespace DxHookIMG
 {
